@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "Vehiculo": {
+      "collection": "myg_vehiculos",
+      "fields": {
+        "placa": { "type": "string" },
+        "piloto": { "type": "string" },
+        "tipo": { "type": "string" },
+        "marcaModelo": { "type": "string" },
+        "anio": { "type": "number" },
+        "kilometraje": { "type": "number" },
+        "proximaFechaServicio": { "type": "string" },
+        "proximoKmServicio": { "type": "number" },
+        "notas": { "type": "string" },
+        "creadoEn": { "type": "string" }
+      }
+    },
+    "Servicio": {
+      "collection": "myg_servicios",
+      "fields": {
+        "placa": { "type": "string" },
+        "piloto": { "type": "string" },
+        "tipoServicio": { "type": "string" },
+        "kilometraje": { "type": "number" },
+        "fecha": { "type": "string" },
+        "proximaFecha": { "type": "string" },
+        "proximoKilometraje": { "type": "number" },
+        "descripcion": { "type": "string" },
+        "tecnico": { "type": "string" },
+        "costoManoObra": { "type": "number" },
+        "costoRepuestos": { "type": "number" },
+        "costoTotal": { "type": "number" },
+        "estado": { "type": "string" },
+        "creadoEn": { "type": "string" }
+      }
+    },
+    "RegistroCombustible": {
+      "collection": "myg_combustible",
+      "fields": {
+        "placa": { "type": "string" },
+        "piloto": { "type": "string" },
+        "fecha": { "type": "string" },
+        "semana": { "type": "number" },
+        "mes": { "type": "string" },
+        "montoQuetzales": { "type": "number" },
+        "galones": { "type": "number" },
+        "kilometraje": { "type": "number" },
+        "gasolinera": { "type": "string" },
+        "numeroComprobante": { "type": "string" },
+        "observaciones": { "type": "string" }
+      }
+    },
+    "RepuestoCatalogo": {
+      "collection": "myg_repuestos",
+      "fields": {
+        "codigo": { "type": "string" },
+        "nombre": { "type": "string" },
+        "categoria": { "type": "string" },
+        "precioQuetzales": { "type": "number" },
+        "stock": { "type": "number" },
+        "stockMinimo": { "type": "number" },
+        "ubicacion": { "type": "string" }
+      }
+    },
+    "Usuario": {
+      "collection": "myg_usuarios",
+      "fields": {
+        "numeroUsuario": { "type": "string" },
+        "nombre": { "type": "string" },
+        "rol": { "type": "string" },
+        "password": { "type": "string" },
+        "activo": { "type": "boolean" },
+        "creadoEn": { "type": "string" }
+      }
+    },
+    "HojaTrabajo": {
+      "collection": "myg_hojas_trabajo",
+      "fields": {
+        "numeroHoja": { "type": "string" },
+        "fecha": { "type": "string" },
+        "placa": { "type": "string" },
+        "piloto": { "type": "string" },
+        "tecnico": { "type": "string" },
+        "kilometraje": { "type": "number" },
+        "trabajoRealizado": { "type": "string" },
+        "repuestosUtilizados": { "type": "array" },
+        "costoManoObra": { "type": "number" },
+        "costoRepuestos": { "type": "number" },
+        "costoTotal": { "type": "number" },
+        "firmaTecnico": { "type": "string" },
+        "firmaPiloto": { "type": "string" },
+        "creadoEn": { "type": "string" }
+      }
+    }
+  }
+}

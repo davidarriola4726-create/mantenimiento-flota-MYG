@@ -1,0 +1,6 @@
+{
+  "name": "Control de Mantenimiento de Vehículos MYG",
+  "description": "Sistema completo de gestión y control de mantenimiento de vehículos en tiempo real con Firebase Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
