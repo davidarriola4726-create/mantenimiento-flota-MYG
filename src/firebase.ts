@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Configuración cargada desde el entorno o archivo de configuración
 const firebaseConfig = {
@@ -30,4 +31,5 @@ try {
 }
 
 export const db = dbInstance;
+export const auth = getAuth(app);
 export { app, firebaseConfig, customDatabaseId };
