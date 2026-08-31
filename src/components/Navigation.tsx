@@ -5,6 +5,7 @@ import {
   Calendar,
   Fuel,
   Wrench,
+  Package,
   FileText,
   FileBarChart,
   Users,
@@ -23,10 +24,11 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const tabs = [
     { id: 'vehiculos', label: 'Vehículos & Fichas', icon: Truck },
+    { id: 'control_mantenimientos', label: 'Control Mantenimientos', icon: Wrench },
     { id: 'alertas', label: 'Alertas Semáforo', icon: AlertTriangle, badge: badgeAlertasCount },
     { id: 'calendario', label: 'Calendario', icon: Calendar },
     { id: 'combustible', label: 'Combustible (Q)', icon: Fuel },
-    { id: 'repuestos', label: 'Control Repuestos', icon: Wrench },
+    { id: 'repuestos', label: 'Catálogo Repuestos', icon: Package },
     { id: 'hoja_campo', label: 'Hoja de Campo', icon: FileText },
     { id: 'informes', label: 'Informes & Imprimir', icon: FileBarChart },
     { id: 'usuarios', label: 'Usuarios & Claves', icon: Users },

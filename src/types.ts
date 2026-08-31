@@ -24,19 +24,21 @@ export interface Vehiculo {
 export interface Servicio {
   id: string;
   placa: string;
-  piloto: string;
-  tecnico: string;
-  tipoServicio: string; // "Preventivo", "Correctivo", "Cambio de Aceite", "Frenos", etc.
-  fecha: string; // YYYY-MM-DD
-  kilometraje: number;
+  piloto: string; // Nombre del chofer/piloto
+  tipoProblema?: string; // Tipo de problema reportado
+  tipoMantenimiento?: 'Preventivo' | 'Correctivo' | string; // Tipo de mantenimiento
+  tipoServicio?: string; // e.g. "Preventivo", "Correctivo", "Cambio de Aceite", "Frenos", etc.
+  fecha: string; // Fecha de ejecución del mantenimiento (YYYY-MM-DD)
+  kilometraje?: number;
   proximaFecha?: string;
   proximoKm?: number;
-  repuestos: RepuestoItem[];
-  costoManoObra: number; // En Quetzales Q
-  costoRepuestos: number; // En Quetzales Q
-  costoTotal: number; // En Quetzales Q
-  descripcion: string;
-  estado: 'completado' | 'programado' | 'en_proceso';
+  repuestos: RepuestoItem[]; // Repuesto o piezas instaladas (con cantidad, precio unitario y total)
+  costoRepuestos: number; // Suma total de los repuestos usados en ese mantenimiento (Q)
+  costoManoObra?: number; // En Quetzales Q
+  costoTotal: number; // Suma total (costoRepuestos + costoManoObra) en Quetzales (GTQ)
+  tecnico?: string;
+  descripcion?: string;
+  estado?: 'completado' | 'programado' | 'en_proceso';
   firmaPiloto?: string; // Data URL Base64
   firmaTecnico?: string; // Data URL Base64
   hojaTrabajoId?: string;

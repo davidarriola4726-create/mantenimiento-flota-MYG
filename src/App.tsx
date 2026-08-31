@@ -19,6 +19,7 @@ import {
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import { VehiculosView } from './components/VehiculosView';
+import { ControlMantenimientosView } from './components/ControlMantenimientosView';
 import { AlertasView } from './components/AlertasView';
 import { CalendarioView } from './components/CalendarioView';
 import { CombustibleView } from './components/CombustibleView';
@@ -146,7 +147,7 @@ export default function App() {
 
   // Transiciones rápidas entre vistas
   const handleProgramarServicio = (placa: string) => {
-    setActiveTab('hoja_campo');
+    setActiveTab('control_mantenimientos');
   };
 
   return (
@@ -175,8 +176,22 @@ export default function App() {
             vehiculos={vehiculos}
             servicios={servicios}
             combustibles={combustibles}
-            onCrearServicioParaPlaca={handleProgramarServicio}
+            onCrearServicioParaPlaca={(placa) => {
+              setActiveTab('control_mantenimientos');
+            }}
             onCrearHojaCampoParaPlaca={handleProgramarServicio}
+          />
+        )}
+
+        {activeTab === 'control_mantenimientos' && (
+          <ControlMantenimientosView
+            vehiculos={vehiculos}
+            servicios={servicios}
+            repuestosCatalogo={repuestos}
+            onSeleccionarPlaca={(placa) => {
+              // Si se requiere ver la ficha del vehiculo
+              setActiveTab('vehiculos');
+            }}
           />
         )}
 

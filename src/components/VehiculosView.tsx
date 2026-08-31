@@ -480,40 +480,51 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
 
       {/* MODAL / SUB-CARPETA INDIVIDUAL DE FICHA DE VEHÍCULO (POR PLACA) */}
       {vehiculoSeleccionadoFicha && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto print:static print:p-0 print:m-0 print:bg-transparent print:backdrop-blur-none print:overflow-visible">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200 print:max-h-none print:shadow-none print:border-none print:rounded-none print:overflow-visible print:w-full">
             {/* Cabecera Ficha */}
-            <div className="p-6 bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-6 bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:bg-white print:text-black print:p-4 print:border-b-2 print:border-slate-900">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-400/30">
+                <div className="p-3 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-400/30 print:hidden">
                   <FolderOpen className="w-7 h-7" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <h3 className="text-2xl font-black font-mono tracking-tight text-white">
+                    <h3 className="text-2xl font-black font-mono tracking-tight text-white print:text-black">
                       {vehiculoSeleccionadoFicha.placa}
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-400/20 text-blue-200 border border-blue-400/30 text-xs uppercase font-bold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-400/20 text-blue-200 border border-blue-400/30 text-xs uppercase font-bold print:border-slate-400 print:text-slate-800">
                       {vehiculoSeleccionadoFicha.tipo}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 mt-0.5">
+                  <p className="text-xs text-slate-300 print:text-slate-600 mt-0.5">
                     Ficha y Subcarpeta Individual de Mantenimiento Flota MYG
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 print:hidden">
                 <button
-                  onClick={() => window.print()}
-                  className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20 flex items-center gap-1.5 transition"
+                  type="button"
+                  onClick={() => {
+                    try {
+                      if (typeof window !== 'undefined') {
+                        window.focus();
+                        setTimeout(() => window.print(), 50);
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20 flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Imprimir Ficha</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setVehiculoSeleccionadoFicha(null)}
-                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition"
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition cursor-pointer"
                 >
                   ✕
                 </button>
@@ -521,7 +532,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
             </div>
 
             {/* Contenido Ficha */}
-            <div className="p-6 overflow-y-auto space-y-6 text-sm text-slate-800">
+            <div className="printable-document printable-area p-6 overflow-y-auto space-y-6 text-sm text-slate-800 print:p-0 print:m-0 print:overflow-visible">
               {/* Datos Generales y Botón Actualizar Km */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div>
@@ -600,7 +611,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-blue-600" />
-                    <span>Historial Completo de Mantenimiento y Reparaciones ({historialServiciosPlaca.length})</span>
+                    <span>Control e Historial de Mantenimientos ({historialServiciosPlaca.length})</span>
                   </h4>
 
                   {onCrearServicioParaPlaca && (
@@ -610,10 +621,10 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                         setVehiculoSeleccionadoFicha(null);
                         onCrearServicioParaPlaca(p);
                       }}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1"
+                      className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Agregar Servicio</span>
+                      <span>+ Nuevo Mantenimiento</span>
                     </button>
                   )}
                 </div>
@@ -623,9 +634,9 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                     <thead className="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
                       <tr>
                         <th className="p-3">Fecha / Km</th>
-                        <th className="p-3">Tipo de Servicio</th>
-                        <th className="p-3">Técnico / Piloto</th>
-                        <th className="p-3">Repuestos Utilizados</th>
+                        <th className="p-3">Tipo Mto. / Problema</th>
+                        <th className="p-3">Chofer / Técnico</th>
+                        <th className="p-3">Repuestos / Piezas Instaladas</th>
                         <th className="p-3 text-right">Total (Q)</th>
                       </tr>
                     </thead>
@@ -633,46 +644,81 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                       {historialServiciosPlaca.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="p-6 text-center text-slate-400">
-                            No hay servicios registrados en el historial de esta placa.
+                            No hay registros de mantenimiento guardados para esta placa.
                           </td>
                         </tr>
                       ) : (
-                        historialServiciosPlaca.map((s) => (
-                          <tr key={s.id} className="hover:bg-slate-50">
-                            <td className="p-3 font-semibold">
-                              <span className="block text-slate-900">{s.fecha}</span>
-                              <span className="text-[11px] font-mono text-slate-500">
-                                {s.kilometraje?.toLocaleString()} km
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <span className="font-bold text-slate-800">{s.tipoServicio}</span>
-                              {s.descripcion && (
-                                <p className="text-[11px] text-slate-500 truncate max-w-xs">{s.descripcion}</p>
-                              )}
-                            </td>
-                            <td className="p-3 text-slate-600">
-                              <span>Téc: {s.tecnico || 'N/A'}</span>
-                              <span className="block text-[11px] text-slate-400">Piloto: {s.piloto}</span>
-                            </td>
-                            <td className="p-3">
-                              {s.repuestos && s.repuestos.length > 0 ? (
-                                <div className="space-y-0.5">
-                                  {s.repuestos.map((r, ri) => (
-                                    <span key={ri} className="inline-block bg-slate-100 text-slate-700 text-[10px] px-1.5 py-0.5 rounded mr-1 mb-0.5">
-                                      {r.cantidad}x {r.nombre}
-                                    </span>
-                                  ))}
+                        historialServiciosPlaca.map((s) => {
+                          const tipoMto =
+                            s.tipoMantenimiento ||
+                            (s.tipoServicio?.toLowerCase().includes('preventivo')
+                              ? 'Preventivo'
+                              : 'Correctivo');
+                          const esPrev = tipoMto.toLowerCase().includes('preventivo');
+
+                          return (
+                            <tr key={s.id} className="hover:bg-slate-50">
+                              <td className="p-3 font-semibold">
+                                <span className="block text-slate-900">{s.fecha}</span>
+                                <span className="text-[11px] font-mono text-slate-500">
+                                  {s.kilometraje ? `${s.kilometraje.toLocaleString()} km` : 'Odóm: N/A'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span
+                                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                      esPrev
+                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                                    }`}
+                                  >
+                                    {tipoMto}
+                                  </span>
                                 </div>
-                              ) : (
-                                <span className="text-slate-400 italic">Sin repuestos</span>
-                              )}
-                            </td>
-                            <td className="p-3 text-right font-mono font-bold text-emerald-800 text-sm">
-                              {formatQuetzales(s.costoTotal)}
-                            </td>
-                          </tr>
-                        ))
+                                <p className="font-bold text-slate-800 text-xs">
+                                  {s.tipoProblema || s.tipoServicio}
+                                </p>
+                                {s.descripcion && s.descripcion !== s.tipoProblema && (
+                                  <p className="text-[10px] text-slate-500 truncate max-w-xs">{s.descripcion}</p>
+                                )}
+                              </td>
+                              <td className="p-3 text-slate-600">
+                                <span className="font-medium block text-slate-800">Chofer: {s.piloto}</span>
+                                <span className="block text-[11px] text-slate-500">Taller: {s.tecnico || 'MYG'}</span>
+                              </td>
+                              <td className="p-3">
+                                {s.repuestos && s.repuestos.length > 0 ? (
+                                  <div className="space-y-1 max-w-xs">
+                                    {s.repuestos.map((r, ri) => (
+                                      <div
+                                        key={ri}
+                                        className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-700 flex items-center justify-between gap-1"
+                                      >
+                                        <span className="font-medium truncate max-w-[120px]">
+                                          {r.cantidad}x {r.nombre}
+                                        </span>
+                                        <span className="font-mono text-slate-600 font-bold shrink-0">
+                                          Q {((r.cantidad || 1) * (r.precio || 0)).toFixed(2)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                    {s.costoRepuestos ? (
+                                      <div className="text-[10px] text-slate-500 text-right pt-0.5">
+                                        Subtotal repuestos: <strong className="font-mono">{formatQuetzales(s.costoRepuestos)}</strong>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px]">Sin repuestos</span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right font-mono font-black text-emerald-800 text-sm">
+                                {formatQuetzales(s.costoTotal)}
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

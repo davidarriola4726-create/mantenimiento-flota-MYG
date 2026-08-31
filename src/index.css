@@ -1,1 +1,87 @@
 @import "tailwindcss";
+
+/* =========================================================
+   ESTILOS DE IMPRESIÓN OFICIALES (@media print)
+   Garantiza que al imprimir SOLO se vean los datos del registro
+   sin menús, botones, encabezados ni fondos oscuros.
+   ========================================================= */
+@media print {
+  /* Ocultar elementos no imprimibles */
+  header,
+  nav,
+  aside,
+  footer,
+  button,
+  .print\:hidden,
+  .no-print,
+  [data-no-print="true"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Resetear página principal y contenedor */
+  html,
+  body,
+  #root,
+  main {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Resetear modales para que se comporten como páginas planas */
+  .fixed,
+  .fixed.inset-0 {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Formato imprimible a tamaño completo */
+  #formato-impresion-mantenimiento,
+  #formato-impresion-informe,
+  #formato-impresion-hoja,
+  .printable-area,
+  .printable-document {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+  }
+
+  /* Configuración de página de impresión */
+  @page {
+    size: letter portrait;
+    margin: 12mm 15mm;
+  }
+
+  /* Evitar saltos de página dentro de tablas o tarjetas */
+  table,
+  tr,
+  td,
+  th {
+    page-break-inside: avoid;
+  }
+}

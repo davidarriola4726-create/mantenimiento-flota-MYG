@@ -79,7 +79,16 @@ export const InformesView: React.FC<InformesViewProps> = ({
   }, [serviciosFiltrados, combustibleFiltrado]);
 
   const handleImprimir = () => {
-    window.print();
+    try {
+      if (typeof window !== 'undefined') {
+        window.focus();
+        setTimeout(() => {
+          window.print();
+        }, 50);
+      }
+    } catch (error) {
+      console.error('Error al invocar window.print():', error);
+    }
   };
 
   const handleExportarCSV = () => {
@@ -253,7 +262,10 @@ export const InformesView: React.FC<InformesViewProps> = ({
       </div>
 
       {/* DOCUMENTO FORMATEADO Y LISTO PARA IMPRIMIR (@media print) */}
-      <div className="bg-white rounded-2xl border border-slate-300 p-8 space-y-6 shadow-sm print:p-0 print:border-none print:shadow-none">
+      <div
+        id="formato-impresion-informe"
+        className="printable-document printable-area bg-white rounded-2xl border border-slate-300 p-8 space-y-6 shadow-sm print:p-0 print:border-none print:shadow-none"
+      >
         {/* Encabezado Oficial Membretado */}
         <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
           <div>

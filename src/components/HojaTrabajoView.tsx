@@ -193,7 +193,16 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
   };
 
   const handleImprimir = () => {
-    window.print();
+    try {
+      if (typeof window !== 'undefined') {
+        window.focus();
+        setTimeout(() => {
+          window.print();
+        }, 50);
+      }
+    } catch (error) {
+      console.error('Error al invocar window.print():', error);
+    }
   };
 
   return (
@@ -604,7 +613,10 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
           </div>
 
           {/* Formato Membretado para Impresión */}
-          <div className="p-4 border border-slate-300 rounded-xl space-y-6 text-slate-900">
+          <div
+            id="formato-impresion-hoja"
+            className="printable-document printable-area p-4 border border-slate-300 rounded-xl space-y-6 text-slate-900 print:p-0 print:border-none"
+          >
             <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
               <div>
                 <h1 className="text-xl font-black tracking-tight">MYG CONTROL DE MANTENIMIENTO</h1>
