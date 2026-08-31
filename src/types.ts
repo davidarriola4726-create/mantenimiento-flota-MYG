@@ -72,6 +72,7 @@ export interface Usuario {
   id: string;
   numeroUsuario: string; // e.g. "ADMIN01", "TEC01", "PILOTO01"
   nombre: string;
+  email?: string;
   password: string;
   rol: 'admin' | 'tecnico' | 'piloto';
   creadoEn: string;

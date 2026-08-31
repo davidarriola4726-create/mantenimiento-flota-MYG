@@ -17,6 +17,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [numeroUsuario, setNumeroUsuario] = useState('');
   const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rol, setRol] = useState<'admin' | 'tecnico' | 'piloto'>('piloto');
   const [error, setError] = useState('');
@@ -27,6 +28,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
     setError('');
 
     const cleanUser = numeroUsuario.trim().toUpperCase();
+    const cleanEmail = email.trim().toLowerCase();
     if (!cleanUser || !nombre.trim() || !password.trim()) {
       setError('Por favor complete todos los campos requeridos.');
       return;
@@ -37,12 +39,18 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
       return;
     }
 
+    if (cleanEmail && usuarios.some((u) => (u.email || '').toLowerCase().trim() === cleanEmail)) {
+      setError('Este correo electrónico ya se encuentra registrado.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const nuevoUsuario: Usuario = {
         id: cleanUser,
         numeroUsuario: cleanUser,
         nombre: nombre.trim(),
+        email: cleanEmail || `${cleanUser.toLowerCase()}@myg.gt`,
         password: password.trim(),
         rol,
         creadoEn: new Date().toISOString(),
@@ -51,6 +59,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
       setShowAddModal(false);
       setNumeroUsuario('');
       setNombre('');
+      setEmail('');
       setPassword('');
       setRol('piloto');
     } catch (err: any) {
@@ -154,6 +163,12 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                     <span className="capitalize font-medium">Rol: {u.rol}</span>
+                    {u.email && (
+                      <>
+                        <span>•</span>
+                        <span className="text-blue-600 font-mono text-[11px]">{u.email}</span>
+                      </>
+                    )}
                     <span>•</span>
                     <span>Contraseña: ••••••••</span>
                   </div>
@@ -221,6 +236,19 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Ej: Roberto Morales"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="ejemplo@myg.gt"
                 />
               </div>
 
