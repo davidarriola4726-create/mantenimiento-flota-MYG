@@ -143,8 +143,27 @@ export async function saveCombustible(registro: RegistroCombustible): Promise<vo
   await setDoc(docRef, dataToSave, { merge: true });
 }
 
+export async function getCombustiblesDirectly(): Promise<RegistroCombustible[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.COMBUSTIBLE));
+  const registros: RegistroCombustible[] = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    registros.push({
+      ...data,
+      id: docSnap.id,
+    } as RegistroCombustible);
+  });
+  registros.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+  return registros;
+}
+
 export async function deleteCombustible(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTIONS.COMBUSTIBLE, id));
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('El ID del documento de combustible es requerido y no puede ser nulo o vacío.');
+  }
+  const cleanId = id.trim();
+  const docRef = doc(db, COLLECTIONS.COMBUSTIBLE, cleanId);
+  await deleteDoc(docRef);
 }
 
 // ============================================

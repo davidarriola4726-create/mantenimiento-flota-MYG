@@ -1,8 +1,20 @@
-import React, { useState, useMemo } from 'react';
-import { Fuel, Plus, Calendar, DollarSign, TrendingUp, TrendingDown, Trash2, Filter, BarChart3, AlertCircle } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Fuel,
+  Plus,
+  Calendar,
+  DollarSign,
+  Trash2,
+  Filter,
+  BarChart3,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  X,
+} from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { RegistroCombustible, Vehiculo } from '../types';
-import { saveCombustible, deleteCombustible } from '../services/firestoreService';
+import { saveCombustible, deleteCombustible, getCombustiblesDirectly } from '../services/firestoreService';
 import { formatQuetzales } from '../utils/alertUtils';
 
 interface CombustibleViewProps {
@@ -14,9 +26,16 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
   const hoy = new Date();
   const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 
+  const [combustiblesLocales, setCombustiblesLocales] = useState<RegistroCombustible[]>(combustibles);
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActualStr);
   const [placaSeleccionada, setPlacaSeleccionada] = useState<string>('TODOS');
   const [modalAbierto, setModalAbierto] = useState(false);
+
+  // Estados de eliminación y mensajes
+  const [registroAEliminar, setRegistroAEliminar] = useState<RegistroCombustible | null>(null);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState('');
+  const [mensajeExito, setMensajeExito] = useState('');
 
   // Campos de formulario
   const [formPlaca, setFormPlaca] = useState(vehiculos[0]?.placa || '');
@@ -30,6 +49,21 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
+  // Sincronizar estado local cuando cambie la colección Firestore
+  useEffect(() => {
+    setCombustiblesLocales(combustibles);
+  }, [combustibles]);
+
+  // Limpiar mensaje de éxito después de 4 segundos
+  useEffect(() => {
+    if (mensajeExito) {
+      const timer = setTimeout(() => {
+        setMensajeExito('');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeExito]);
+
   // Al cambiar la placa del form, rellenar piloto automáticamente
   const handlePlacaChange = (placaVal: string) => {
     setFormPlaca(placaVal);
@@ -41,12 +75,12 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
 
   // Filtrado por mes y placa
   const registrosFiltrados = useMemo(() => {
-    return combustibles.filter((c) => {
+    return combustiblesLocales.filter((c) => {
       const matchMes = !mesSeleccionado || c.mes === mesSeleccionado;
       const matchPlaca = placaSeleccionada === 'TODOS' || c.placa === placaSeleccionada;
       return matchMes && matchPlaca;
     });
-  }, [combustibles, mesSeleccionado, placaSeleccionada]);
+  }, [combustiblesLocales, mesSeleccionado, placaSeleccionada]);
 
   // Cálculo automático del total mensual y desglose por semanas (1, 2, 3, 4)
   const resumenSemanas = useMemo(() => {
@@ -81,11 +115,11 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
   const mesesDisponibles = useMemo(() => {
     const set = new Set<string>();
     set.add(mesActualStr);
-    combustibles.forEach((c) => {
+    combustiblesLocales.forEach((c) => {
       if (c.mes) set.add(c.mes);
     });
     return Array.from(set).sort().reverse();
-  }, [combustibles, mesActualStr]);
+  }, [combustiblesLocales, mesActualStr]);
 
   const abrirModalNuevo = () => {
     const defaultPlaca = vehiculos[0]?.placa || '';
@@ -115,7 +149,7 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
     setGuardando(true);
     try {
       const nuevoRegistro: RegistroCombustible = {
-        id: `comb_${Date.now()}`,
+        id: `comb_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         placa: formPlaca.trim().toUpperCase(),
         mes: formMes,
         semana: Number(formSemana),
@@ -129,6 +163,7 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
 
       await saveCombustible(nuevoRegistro);
       setModalAbierto(false);
+      setMensajeExito('✅ Registro de combustible agregado correctamente');
     } catch (err: any) {
       setError('Error al registrar combustible: ' + (err.message || 'Error'));
     } finally {
@@ -136,18 +171,69 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
     }
   };
 
-  const handleEliminar = async (id: string) => {
-    if (confirm('¿Deseas eliminar este registro de combustible?')) {
-      try {
-        await deleteCombustible(id);
-      } catch (err) {
-        console.error('Error eliminando combustible:', err);
+  const solicitarEliminar = (registro: RegistroCombustible) => {
+    setRegistroAEliminar(registro);
+    setErrorEliminar('');
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!registroAEliminar || !registroAEliminar.id) {
+      setErrorEliminar('No se pudo eliminar: ID de registro no válido o indefinido ⚠️');
+      return;
+    }
+
+    const idAEliminar = registroAEliminar.id.trim();
+    setEliminando(true);
+    setErrorEliminar('');
+
+    try {
+      // 1. Ejecutar deleteDoc con el ID exacto en Firestore
+      await deleteCombustible(idAEliminar);
+
+      // 2. Limpiar la lista local inmediatamente
+      setCombustiblesLocales((prev) => prev.filter((item) => item.id !== idAEliminar));
+
+      // 3. Volver a leer directamente desde Firebase Firestore para confirmar la eliminación
+      const datosConfirmados = await getCombustiblesDirectly();
+      const todaviaExiste = datosConfirmados.some((item) => item.id === idAEliminar);
+
+      if (todaviaExiste) {
+        throw new Error('El servidor no confirmó la eliminación del documento. Intente de nuevo.');
       }
+
+      // 4. Actualizar la vista con los datos confirmados desde el servidor
+      setCombustiblesLocales(datosConfirmados);
+
+      // 5. Cerrar diálogo de confirmación y mostrar mensaje de éxito
+      setRegistroAEliminar(null);
+      setMensajeExito('✅ Registro de combustible eliminado correctamente');
+    } catch (err: any) {
+      console.error('Error al eliminar registro de combustible de Firestore:', err);
+      const motivo = err?.message || 'Error de conexión o permisos con Firebase Firestore';
+      setErrorEliminar(`No se pudo eliminar: ${motivo} ⚠️`);
+    } finally {
+      setEliminando(false);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Banner de Notificación de Éxito */}
+      {mensajeExito && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-bold text-sm">{mensajeExito}</span>
+          </div>
+          <button
+            onClick={() => setMensajeExito('')}
+            className="text-emerald-700 hover:text-emerald-900 p-1 rounded-lg hover:bg-emerald-100/60 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-3">
@@ -165,7 +251,7 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
         <button
           onClick={abrirModalNuevo}
           id="btn-nuevo-combustible"
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-xs"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Registrar Consumo Semanal</span>
@@ -355,9 +441,10 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
                     </td>
                     <td className="py-3 px-4 text-center">
                       <button
-                        onClick={() => handleEliminar(r.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                        title="Eliminar"
+                        onClick={() => solicitarEliminar(r)}
+                        id={`btn-del-combustible-${r.id}`}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                        title="Eliminar registro de combustible"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -386,9 +473,9 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
               </div>
               <button
                 onClick={() => setModalAbierto(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -514,7 +601,7 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
                 <button
                   type="button"
                   onClick={() => setModalAbierto(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -522,12 +609,120 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
                   type="submit"
                   disabled={guardando}
                   id="btn-guardar-combustible-modal"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
                 >
                   {guardando ? 'Guardando...' : 'Guardar Consumo'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {registroAEliminar && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-red-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Cabecera modal */}
+            <div className="p-5 bg-gradient-to-r from-red-600 to-rose-700 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Eliminar Registro de Combustible</h3>
+                  <p className="text-xs text-red-100 font-medium">Control de Flota MYG</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRegistroAEliminar(null)}
+                disabled={eliminando}
+                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenido y mensaje de advertencia requerido */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
+                <span className="text-lg">⚠️</span>
+                <p className="font-semibold leading-relaxed">
+                  ¿Estás seguro de eliminar este repuesto? Esta acción no se puede deshacer.
+                </p>
+              </div>
+
+              {/* Ficha del registro de combustible seleccionado */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold uppercase">Vehículo / Placa:</span>
+                  <span className="font-extrabold text-slate-900 font-mono text-sm">{registroAEliminar.placa}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold uppercase">Período:</span>
+                  <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-[11px] border border-blue-200">
+                    Mes: {registroAEliminar.mes} • Semana {registroAEliminar.semana}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold uppercase">Fecha:</span>
+                  <span className="font-medium text-slate-700">{registroAEliminar.fecha}</span>
+                </div>
+                {registroAEliminar.piloto && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-bold uppercase">Piloto:</span>
+                    <span className="font-medium text-slate-700">{registroAEliminar.piloto}</span>
+                  </div>
+                )}
+                {registroAEliminar.galones !== undefined && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-bold uppercase">Galones:</span>
+                    <span className="font-mono text-slate-700">{registroAEliminar.galones} gal</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+                  <span className="text-slate-500 font-bold uppercase">Monto en Quetzales:</span>
+                  <span className="font-mono font-black text-sm text-emerald-700">
+                    {formatQuetzales(registroAEliminar.montoQuetzales)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                  <span>ID Registro:</span>
+                  <span>{registroAEliminar.id}</span>
+                </div>
+              </div>
+
+              {errorEliminar && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{errorEliminar}</span>
+                </div>
+              )}
+
+              {/* Botones de acción */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRegistroAEliminar(null)}
+                  disabled={eliminando}
+                  id="btn-cancelar-eliminar-combustible"
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmarEliminar}
+                  disabled={eliminando}
+                  id="btn-confirmar-eliminar-combustible"
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>{eliminando ? 'Eliminando del servidor...' : 'Sí, Eliminar'}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
