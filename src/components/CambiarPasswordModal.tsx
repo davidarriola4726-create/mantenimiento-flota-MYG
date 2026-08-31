@@ -122,7 +122,7 @@ export const CambiarPasswordModal: React.FC<CambiarPasswordModalProps> = ({
             <div>
               <h3 className="font-bold text-base">Cambiar Contraseña</h3>
               <p className="text-xs text-slate-300">
-                Usuario: <span className="font-bold text-white">{usuario.numeroUsuario} (MYG)</span>
+                Usuario: <span className="font-bold text-white">{usuario.numeroUsuario}</span>
               </p>
             </div>
           </div>
