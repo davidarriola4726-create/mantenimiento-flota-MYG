@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   deleteDoc,
   onSnapshot,
@@ -154,17 +155,37 @@ export function subscribeRepuestos(callback: (repuestos: RepuestoCatalogo[]) => 
   return onSnapshot(q, (snapshot) => {
     const repuestos: RepuestoCatalogo[] = [];
     snapshot.forEach((docSnap) => {
-      repuestos.push({ id: docSnap.id, ...docSnap.data() } as RepuestoCatalogo);
+      const data = docSnap.data();
+      repuestos.push({
+        ...data,
+        id: docSnap.id,
+      } as RepuestoCatalogo);
     });
-    repuestos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    repuestos.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
     callback(repuestos);
   }, (error) => {
     console.error('Error al escuchar repuestos en tiempo real:', error);
   });
 }
 
+export async function getRepuestosDirectly(): Promise<RepuestoCatalogo[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.REPUESTOS));
+  const repuestos: RepuestoCatalogo[] = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    repuestos.push({
+      ...data,
+      id: docSnap.id,
+    } as RepuestoCatalogo);
+  });
+  repuestos.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  return repuestos;
+}
+
 export async function saveRepuesto(repuesto: RepuestoCatalogo): Promise<void> {
-  const docId = repuesto.id || `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const docId = repuesto.id && repuesto.id.trim()
+    ? repuesto.id.trim()
+    : `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const docRef = doc(db, COLLECTIONS.REPUESTOS, docId);
   const dataToSave = {
     ...repuesto,
@@ -175,7 +196,12 @@ export async function saveRepuesto(repuesto: RepuestoCatalogo): Promise<void> {
 }
 
 export async function deleteRepuesto(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTIONS.REPUESTOS, id));
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('El ID del documento de repuesto es requerido y no puede ser nulo o vacío.');
+  }
+  const cleanId = id.trim();
+  const docRef = doc(db, COLLECTIONS.REPUESTOS, cleanId);
+  await deleteDoc(docRef);
 }
 
 // ============================================
@@ -248,6 +274,13 @@ export async function cambiarPasswordUsuario(numeroUsuario: string, nuevaPasswor
 // ============================================
 export async function inicializarDatosPredeterminados(): Promise<void> {
   try {
+    // Verificar si el sistema ya fue inicializado previamente para evitar reinsertar registros borrados
+    const configRef = doc(db, '_config', 'seed_completed');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+      return;
+    }
+
     // 1. Usuarios iniciales si no existen
     const usersSnap = await getDocs(collection(db, COLLECTIONS.USUARIOS));
     if (usersSnap.empty) {
@@ -282,7 +315,7 @@ export async function inicializarDatosPredeterminados(): Promise<void> {
       }
     }
 
-    // 2. Repuestos de catálogo si está vacío
+    // 2. Repuestos de catálogo si está vacío (sólo en primer despliegue)
     const repuestosSnap = await getDocs(collection(db, COLLECTIONS.REPUESTOS));
     if (repuestosSnap.empty) {
       const repuestosIniciales: RepuestoCatalogo[] = [
@@ -408,6 +441,9 @@ export async function inicializarDatosPredeterminados(): Promise<void> {
         await setDoc(doc(db, COLLECTIONS.COMBUSTIBLE, c.id), c);
       }
     }
+
+    // Registrar marca de configuración inicial completada
+    await setDoc(configRef, { initializedAt: new Date().toISOString() }, { merge: true });
   } catch (error) {
     console.error('Error al inicializar datos predeterminados en Firestore:', error);
   }

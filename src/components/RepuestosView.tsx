@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Wrench, Plus, Search, Trash2, Edit2, Check, X, Tag, DollarSign, PackageCheck, AlertCircle, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Wrench, Plus, Search, Trash2, Edit2, Check, X, Tag, DollarSign, PackageCheck, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { RepuestoCatalogo, Servicio } from '../types';
-import { saveRepuesto, deleteRepuesto } from '../services/firestoreService';
+import { saveRepuesto, deleteRepuesto, getRepuestosDirectly } from '../services/firestoreService';
 import { formatQuetzales } from '../utils/alertUtils';
 
 interface RepuestosViewProps {
@@ -10,6 +10,7 @@ interface RepuestosViewProps {
 }
 
 export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servicios }) => {
+  const [repuestosLocales, setRepuestosLocales] = useState<RepuestoCatalogo[]>(repuestos);
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoRepuesto, setEditandoRepuesto] = useState<RepuestoCatalogo | null>(null);
@@ -26,18 +27,34 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
   const [repuestoAEliminar, setRepuestoAEliminar] = useState<RepuestoCatalogo | null>(null);
   const [eliminando, setEliminando] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState('');
+  const [mensajeExito, setMensajeExito] = useState('');
+
+  // Sincronizar repuestos locales cuando cambien los props desde Firestore
+  useEffect(() => {
+    setRepuestosLocales(repuestos);
+  }, [repuestos]);
+
+  // Limpiar mensaje de éxito después de 4 segundos
+  useEffect(() => {
+    if (mensajeExito) {
+      const timer = setTimeout(() => {
+        setMensajeExito('');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeExito]);
 
   // Filtrado de repuestos
   const repuestosFiltrados = useMemo(() => {
-    return repuestos.filter((r) => {
+    return repuestosLocales.filter((r) => {
       const term = busqueda.toLowerCase();
       return (
-        r.nombre.toLowerCase().includes(term) ||
+        (r.nombre || '').toLowerCase().includes(term) ||
         (r.categoria && r.categoria.toLowerCase().includes(term)) ||
         (r.codigo && r.codigo.toLowerCase().includes(term))
       );
     });
-  }, [repuestos, busqueda]);
+  }, [repuestosLocales, busqueda]);
 
   // Cálculo de total gastado en repuestos en todos los servicios
   const totalRepuestosUsadosEnServicios = useMemo(() => {
@@ -97,6 +114,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
 
       await saveRepuesto(repuestoData);
       setModalAbierto(false);
+      setMensajeExito(editandoRepuesto ? '✅ Repuesto actualizado correctamente' : '✅ Repuesto agregado correctamente');
     } catch (err: any) {
       setError('Error al guardar repuesto: ' + (err.message || 'Error desconocido'));
     } finally {
@@ -110,15 +128,40 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
   };
 
   const handleConfirmarEliminar = async () => {
-    if (!repuestoAEliminar) return;
+    if (!repuestoAEliminar || !repuestoAEliminar.id) {
+      setErrorEliminar('No se pudo eliminar: ID de repuesto no válido o indefinido ⚠️');
+      return;
+    }
+
+    const idAEliminar = repuestoAEliminar.id.trim();
     setEliminando(true);
     setErrorEliminar('');
+
     try {
-      await deleteRepuesto(repuestoAEliminar.id);
+      // 1. Ejecutar deleteDoc con el ID exacto del documento en Firestore y esperar a que complete
+      await deleteRepuesto(idAEliminar);
+
+      // 2. Limpiar la lista local temporalmente
+      setRepuestosLocales((prev) => prev.filter((item) => item.id !== idAEliminar));
+
+      // 3. Volver a LEER los datos directamente desde Firebase para confirmar que ya no existe en el servidor
+      const datosConfirmados = await getRepuestosDirectly();
+      const todaviaExiste = datosConfirmados.some((item) => item.id === idAEliminar);
+
+      if (todaviaExiste) {
+        throw new Error('El servidor no confirmó la eliminación del documento. Intente de nuevo.');
+      }
+
+      // 4. Actualizar la vista con los datos confirmados desde el servidor
+      setRepuestosLocales(datosConfirmados);
+
+      // 5. Cerrar diálogo de confirmación y mostrar mensaje de éxito
       setRepuestoAEliminar(null);
+      setMensajeExito('✅ Repuesto eliminado correctamente');
     } catch (err: any) {
       console.error('Error al eliminar repuesto de Firestore:', err);
-      setErrorEliminar('Error al eliminar en la base de datos: ' + (err.message || 'Error desconocido'));
+      const motivo = err?.message || 'Error de conexión o permisos con Firebase Firestore';
+      setErrorEliminar(`No se pudo eliminar: ${motivo} ⚠️`);
     } finally {
       setEliminando(false);
     }
@@ -126,6 +169,22 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
 
   return (
     <div className="space-y-6">
+      {/* Banner de Notificación de Éxito */}
+      {mensajeExito && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-bold text-sm">{mensajeExito}</span>
+          </div>
+          <button
+            onClick={() => setMensajeExito('')}
+            className="text-emerald-700 hover:text-emerald-900 p-1 rounded-lg hover:bg-emerald-100/60 transition cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Encabezado y Métricas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-3">
@@ -143,7 +202,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
         <button
           onClick={abrirModalNuevo}
           id="btn-agregar-repuesto"
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-xs"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Repuesto</span>
@@ -155,7 +214,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Repuestos en Catálogo</span>
-            <p className="text-2xl font-black text-slate-800 mt-1">{repuestos.length}</p>
+            <p className="text-2xl font-black text-slate-800 mt-1">{repuestosLocales.length}</p>
           </div>
           <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
             <PackageCheck className="w-6 h-6" />
@@ -478,6 +537,10 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
                     {formatQuetzales(repuestoAEliminar.precio)}
                   </span>
                 </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                  <span>ID Firestore:</span>
+                  <span>{repuestoAEliminar.id}</span>
+                </div>
               </div>
 
               {errorEliminar && (
@@ -505,7 +568,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
                   className="px-5 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>{eliminando ? 'Eliminando...' : 'Sí, Eliminar'}</span>
+                  <span>{eliminando ? 'Eliminando del servidor...' : 'Sí, Eliminar'}</span>
                 </button>
               </div>
             </div>
@@ -515,3 +578,4 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
     </div>
   );
 };
+
