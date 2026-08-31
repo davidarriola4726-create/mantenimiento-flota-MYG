@@ -110,18 +110,15 @@ export const Header: React.FC<HeaderProps> = ({
           {currentUser && (
             <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
               <div className="hidden sm:block text-right">
-                <span className="block text-xs font-bold text-white truncate max-w-[130px]">
-                  {currentUser.nombre}
-                </span>
-                <span className="block text-[10px] font-mono text-slate-400 uppercase">
-                  {currentUser.numeroUsuario} ({currentUser.rol})
+                <span className="block text-xs font-bold text-white">
+                  Técnico MYG
                 </span>
               </div>
 
               <button
                 onClick={onOpenCambiarPassword}
                 id="btn-header-change-pass"
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"
+                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
                 title="Cambiar Contraseña"
               >
                 <KeyRound className="w-4 h-4" />
@@ -130,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onLogout}
                 id="btn-header-logout"
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition"
+                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition cursor-pointer"
                 title="Cerrar Sesión"
               >
                 <LogOut className="w-4 h-4" />
