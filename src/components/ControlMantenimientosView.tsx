@@ -1097,10 +1097,13 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
               {/* Membrete y Cabecera */}
               <div className="flex items-start justify-between border-b-2 border-slate-900 pb-5">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-base">
-                      MYG
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo_myg.png"
+                      alt="Logo MYG"
+                      className="h-10 w-auto object-contain rounded-lg border border-slate-300"
+                      referrerPolicy="no-referrer"
+                    />
                     <div>
                       <h1 className="text-xl font-black tracking-tight text-slate-900">
                         CONTROL DE VEHÍCULOS "MYG"

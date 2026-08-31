@@ -33,9 +33,19 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
         {/* Marca & Logo */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelectTab('vehiculos')}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
-            <Truck className="w-6 h-6" />
+        <div
+          className="flex items-center gap-3 cursor-pointer select-none group"
+          onClick={() => onSelectTab('vehiculos')}
+          id="header-brand-logo"
+        >
+          <div className="relative shrink-0 flex items-center justify-center">
+            <img
+              src="/logo_myg.png"
+              alt="Logo Control de Vehículos MYG"
+              className="h-[45px] max-h-[45px] w-auto object-contain rounded-xl shadow-md border border-slate-700/60 bg-slate-950 transition-transform group-hover:scale-105"
+              referrerPolicy="no-referrer"
+              loading="eager"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">

@@ -49,8 +49,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Encabezado con branding automotriz */}
         <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 text-center relative">
-          <div className="w-16 h-16 bg-blue-600/30 border-2 border-blue-400/50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-300 shadow-lg">
-            <Truck className="w-9 h-9" />
+          <div className="relative mx-auto mb-3 flex items-center justify-center">
+            <img
+              src="/logo_myg.png"
+              alt="Logo Control de Vehículos MYG"
+              className="h-16 w-auto object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950/80"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <h1 className="text-xl font-black tracking-tight">CONTROL DE VEHÍCULOS "MYG"</h1>
           <p className="text-xs text-blue-200 mt-1 font-medium">

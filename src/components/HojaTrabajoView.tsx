@@ -618,9 +618,17 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
             className="printable-document printable-area p-4 border border-slate-300 rounded-xl space-y-6 text-slate-900 print:p-0 print:border-none"
           >
             <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-              <div>
-                <h1 className="text-xl font-black tracking-tight">MYG CONTROL DE MANTENIMIENTO</h1>
-                <p className="text-xs text-slate-600">Hoja de Trabajo y Servicio Técnico en Campo</p>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/logo_myg.png"
+                  alt="Logo MYG"
+                  className="h-10 w-auto object-contain rounded-lg border border-slate-300"
+                  referrerPolicy="no-referrer"
+                />
+                <div>
+                  <h1 className="text-xl font-black tracking-tight">CONTROL DE VEHÍCULOS "MYG"</h1>
+                  <p className="text-xs text-slate-600">Hoja de Trabajo y Servicio Técnico en Campo</p>
+                </div>
               </div>
               <div className="text-right">
                 <span className="font-mono font-black text-base text-blue-900 block">

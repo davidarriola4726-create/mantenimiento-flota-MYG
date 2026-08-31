@@ -268,16 +268,24 @@ export const InformesView: React.FC<InformesViewProps> = ({
       >
         {/* Encabezado Oficial Membretado */}
         <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-950">
-              CONTROL DE VEHÍCULOS "MYG"
-            </h1>
-            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Informe Oficial de Mantenimiento, Repuestos y Combustible
-            </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Generado el {new Date().toLocaleDateString('es-GT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo_myg.png"
+              alt="Logo MYG"
+              className="h-11 w-auto object-contain rounded-lg border border-slate-300"
+              referrerPolicy="no-referrer"
+            />
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-950">
+                CONTROL DE VEHÍCULOS "MYG"
+              </h1>
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                Informe Oficial de Mantenimiento, Repuestos y Combustible
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Generado el {new Date().toLocaleDateString('es-GT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
           </div>
 
           <div className="text-right">
