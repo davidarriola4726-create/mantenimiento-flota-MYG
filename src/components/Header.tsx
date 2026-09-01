@@ -9,12 +9,17 @@ import {
   AlertTriangle,
   Server,
   HelpCircle,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { Usuario } from '../types';
 
 interface HeaderProps {
   currentUser: Usuario | null;
   contadoresAlertas: { verdes: number; amarillos: number; rojos: number; total: number };
+  audioEnabled: boolean;
+  onToggleAudio: () => void;
+  onPlayGreeting: () => void;
   onOpenCambiarPassword: () => void;
   onOpenVercelModal: () => void;
   onLogout: () => void;
@@ -24,6 +29,9 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
   contadoresAlertas,
+  audioEnabled,
+  onToggleAudio,
+  onPlayGreeting,
   onOpenCambiarPassword,
   onOpenVercelModal,
   onLogout,
@@ -97,6 +105,46 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Acciones de Usuario & Despliegue Vercel */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Botón Control de Voz y Audio 🔊 / 🔇 */}
+          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+            <button
+              onClick={onToggleAudio}
+              id="btn-toggle-audio-header"
+              className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                audioEnabled
+                  ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40 hover:bg-blue-600/40'
+                  : 'bg-slate-700/50 text-slate-400 border border-slate-600/30 hover:bg-slate-700'
+              }`}
+              title={
+                audioEnabled
+                  ? 'Voz activa (clic para silenciar)'
+                  : 'Voz silenciada (clic para activar)'
+              }
+            >
+              {audioEnabled ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="hidden md:inline text-[11px]">Voz 🔊</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden md:inline text-[11px]">Mudo 🔇</span>
+                </>
+              )}
+            </button>
+            {audioEnabled && (
+              <button
+                onClick={onPlayGreeting}
+                id="btn-play-greeting-header"
+                className="px-2 py-1 bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-semibold transition cursor-pointer hidden lg:inline"
+                title="Reproducir saludo de bienvenida de nuevo"
+              >
+                Saludar
+              </button>
+            )}
+          </div>
+
           <button
             onClick={onOpenVercelModal}
             id="btn-guia-vercel-header"

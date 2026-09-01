@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   subscribeVehiculos,
   subscribeServicios,
@@ -31,8 +31,17 @@ import { LoginModal } from './components/LoginModal';
 import { CambiarPasswordModal } from './components/CambiarPasswordModal';
 import { VercelModal } from './components/VercelModal';
 import { calcularAlertaVehiculo } from './utils/alertUtils';
+import {
+  reproducirSaludoAudio,
+  reproducirSaludoVoz,
+  isAudioSaludoEnabled,
+  setAudioSaludoEnabled,
+} from './utils/voiceUtils';
 
 export default function App() {
+  // Referencia al elemento HTML5 Audio
+  const audioGreetingRef = useRef<HTMLAudioElement | null>(null);
+
   // Estados de datos sincronizados en tiempo real
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
@@ -40,6 +49,9 @@ export default function App() {
   const [repuestos, setRepuestos] = useState<RepuestoCatalogo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [hojasTrabajo, setHojasTrabajo] = useState<HojaTrabajo[]>([]);
+
+  // Control de audio y voz
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(() => isAudioSaludoEnabled());
 
   // Estado de sesión de usuario
   const [currentUser, setCurrentUser] = useState<Usuario | null>(() => {
@@ -60,6 +72,48 @@ export default function App() {
   // Modales
   const [cambiarPasswordAbierto, setCambiarPasswordAbierto] = useState(false);
   const [vercelModalAbierto, setVercelModalAbierto] = useState(false);
+
+  // Reproducir saludo automático de audio una sola vez al cargar la pantalla principal
+  useEffect(() => {
+    if (currentUser && audioEnabled) {
+      // Intentar reproducción inmediata
+      const timer = setTimeout(() => {
+        reproducirSaludoAudio(audioGreetingRef.current, false);
+      }, 400);
+
+      // Manejo del bloqueo de autoplay en navegadores (reproducir al primer clic / toque del usuario)
+      const handlePrimerInteract = () => {
+        reproducirSaludoAudio(audioGreetingRef.current, false);
+        window.removeEventListener('click', handlePrimerInteract);
+        window.removeEventListener('keydown', handlePrimerInteract);
+        window.removeEventListener('touchstart', handlePrimerInteract);
+      };
+
+      window.addEventListener('click', handlePrimerInteract, { once: true });
+      window.addEventListener('keydown', handlePrimerInteract, { once: true });
+      window.addEventListener('touchstart', handlePrimerInteract, { once: true });
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('click', handlePrimerInteract);
+        window.removeEventListener('keydown', handlePrimerInteract);
+        window.removeEventListener('touchstart', handlePrimerInteract);
+      };
+    }
+  }, [currentUser, audioEnabled]);
+
+  const handleToggleAudio = () => {
+    const nuevoEstado = !audioEnabled;
+    setAudioEnabled(nuevoEstado);
+    setAudioSaludoEnabled(nuevoEstado);
+    if (nuevoEstado) {
+      reproducirSaludoAudio(audioGreetingRef.current, true);
+    }
+  };
+
+  const handlePlayGreeting = () => {
+    reproducirSaludoAudio(audioGreetingRef.current, true);
+  };
 
   // Inicialización y suscripciones Firestore en tiempo real
   useEffect(() => {
@@ -124,6 +178,10 @@ export default function App() {
   const handleLogin = (user: Usuario) => {
     setCurrentUser(user);
     localStorage.setItem('myg_user_session', JSON.stringify(user));
+    // Saludo de audio inmediato tras iniciar sesión
+    setTimeout(() => {
+      reproducirSaludoAudio(audioGreetingRef.current, true);
+    }, 350);
   };
 
   const handleLogout = () => {
@@ -162,6 +220,9 @@ export default function App() {
       <Header
         currentUser={currentUser}
         contadoresAlertas={contadoresAlertas}
+        audioEnabled={audioEnabled}
+        onToggleAudio={handleToggleAudio}
+        onPlayGreeting={handlePlayGreeting}
         onOpenCambiarPassword={() => setCambiarPasswordAbierto(true)}
         onOpenVercelModal={() => setVercelModalAbierto(true)}
         onLogout={handleLogout}
@@ -282,6 +343,15 @@ export default function App() {
       <VercelModal
         isOpen={vercelModalAbierto}
         onClose={() => setVercelModalAbierto(false)}
+      />
+
+      {/* Elemento HTML5 Audio para reproducción de saludo de audio sin controles visibles */}
+      <audio
+        ref={audioGreetingRef}
+        id="audio-saludo-myg"
+        preload="auto"
+        className="hidden"
+        aria-hidden="true"
       />
     </div>
   );
