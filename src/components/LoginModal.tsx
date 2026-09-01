@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   UserPlus,
-  LogIn,
   Eye,
   EyeOff,
 } from 'lucide-react';
@@ -62,7 +61,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // ----------------------------------------------------
-  // 1. INICIAR SESIÓN (CON CORREO Y CONTRASEÑA OBLIGATORIOS)
+  // 1. INICIAR SESIÓN (CORREO Y CONTRASEÑA OBLIGATORIOS)
+  // Identifica automáticamente el usuario y su rol según su correo
   // ----------------------------------------------------
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +89,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     setLoginLoading(true);
 
     try {
-      // 1. Intentar autenticación con Firebase Auth
+      // 1. Intentar autenticación con Firebase Authentication
       let authSucceeded = false;
       try {
         await signInWithEmailAndPassword(auth, email, password);
@@ -103,7 +103,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         }
       }
 
-      // 2. Buscar el usuario correspondiente en la base de datos Firestore
+      // 2. Identificar el usuario y su rol automáticamente en la base de datos Firestore
       const foundUser = usuarios.find((u) => {
         const uEmail = (u.email || '').toLowerCase().trim();
         const matchesEmail = uEmail === email;
@@ -112,9 +112,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
       });
 
       if (foundUser) {
+        // Usuario identificado con su rol asignado automáticamente
         onLogin(foundUser);
       } else if (authSucceeded) {
-        // Usuario autenticado en Firebase Auth pero sin perfil previo en lista local
+        // Usuario autenticado en Firebase Auth pero sin perfil previo en Firestore
         const genericUser: Usuario = {
           id: email.split('@')[0].toUpperCase(),
           numeroUsuario: email.split('@')[0].toUpperCase(),
@@ -127,12 +128,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         await saveUsuario(genericUser);
         onLogin(genericUser);
       } else {
-        // Buscar si el correo existe con otra contraseña o si no coincide
+        // Buscar si el correo existe con otra contraseña
         const userExists = usuarios.find((u) => (u.email || '').toLowerCase().trim() === email);
         if (userExists) {
-          setLoginError('Contraseña incorrecta. Verifica tus datos o recupera tu contraseña.');
+          setLoginError('Contraseña incorrecta. Verifica tus credenciales o recupera tu contraseña.');
         } else {
-          setLoginError('No se encontró ninguna cuenta con este correo electrónico.');
+          setLoginError('No se encontró ninguna cuenta registrada con este correo electrónico.');
         }
       }
     } catch (err: any) {
@@ -144,7 +145,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
   };
 
   // ----------------------------------------------------
-  // 2. REGISTRARSE (CORREO, CONTRASEÑA >= 6, CONFIRMACIÓN, CÓDIGO)
+  // 2. REGISTRARSE (CORREO, PASS >= 6, CONFIRMAR, CÓDIGO)
   // ----------------------------------------------------
   const handleRegistroSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,13 +213,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     setRegLoading(true);
 
     try {
-      // 1. Guardar en Firebase Authentication para habilitar login y recuperación de contraseña
+      // 1. Guardar en Firebase Authentication
       try {
         await createUserWithEmailAndPassword(auth, email, password);
       } catch (authErr: any) {
         console.warn('Firebase Auth createUser code:', authErr.code);
         if (authErr.code === 'auth/email-already-in-use') {
-          // El correo ya existe en Auth
           setRegError('Este correo electrónico ya está registrado en Firebase Authentication.');
           setRegLoading(false);
           return;
@@ -233,7 +233,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         }
       }
 
-      // 2. Guardar perfil completo en Firestore
+      // 2. Guardar perfil en Firestore
       const nuevoUsuario: Usuario = {
         id: codigoUsuario,
         numeroUsuario: codigoUsuario,
@@ -246,7 +246,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
 
       await saveUsuario(nuevoUsuario);
 
-      setRegSuccess('¡Cuenta registrada exitosamente en Firebase! Iniciando sesión...');
+      setRegSuccess('¡Cuenta creada exitosamente en Firebase! Iniciando sesión...');
 
       setTimeout(() => {
         onLogin(nuevoUsuario);
@@ -295,18 +295,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     }
   };
 
-  // Accesos rápidos de demostración
-  const handleQuickLogin = (u: Usuario) => {
-    const defaultEmail = u.email || `${u.numeroUsuario.toLowerCase()}@myg.gt`;
-    setLoginEmail(defaultEmail);
-    setLoginPassword(u.password);
-    onLogin(u);
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
-        {/* Encabezado con branding automotriz */}
+        {/* Encabezado con branding corporativo */}
         <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 text-center relative">
           <div className="relative mx-auto mb-3 flex items-center justify-center">
             <img
@@ -322,55 +314,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
           </p>
         </div>
 
-        {/* Pestañas / Selector entre Iniciar Sesión y Registrarse */}
-        {activeTab !== 'recuperar' && (
-          <div className="grid grid-cols-2 bg-slate-100 p-1.5 border-b border-slate-200">
-            <button
-              type="button"
-              id="tab-iniciar-sesion"
-              onClick={() => {
-                setActiveTab('login');
-                setLoginError('');
-                setRegError('');
-              }}
-              className={`py-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
-                activeTab === 'login'
-                  ? 'bg-white text-blue-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Iniciar Sesión</span>
-            </button>
-            <button
-              type="button"
-              id="tab-registrarse"
-              onClick={() => {
-                setActiveTab('registro');
-                setLoginError('');
-                setRegError('');
-              }}
-              className={`py-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
-                activeTab === 'registro'
-                  ? 'bg-white text-blue-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Registrarse</span>
-            </button>
-          </div>
-        )}
-
         {/* ----------------------------------------------------------- */}
-        {/* VISTA 1: INICIAR SESIÓN (CORREO Y CONTRASEÑA OBLIGATORIOS)  */}
+        {/* VISTA 1: INICIAR SESIÓN (ÚNICAMENTE CORREO Y CONTRASEÑA)   */}
         {/* ----------------------------------------------------------- */}
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="p-6 space-y-4 animate-in fade-in duration-150">
+            {/* Campo: Correo Electrónico */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                 <span>📧 Correo Electrónico</span>
-                <span className="text-[10px] text-blue-600 font-semibold lowercase">obligatorio</span>
               </label>
               <div className="relative">
                 <Mail className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -390,10 +342,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
               </div>
             </div>
 
+            {/* Campo: Contraseña */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                 <span>🔑 Contraseña</span>
-                <span className="text-[10px] text-blue-600 font-semibold lowercase">obligatoria</span>
               </label>
               <div className="relative">
                 <KeyRound className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -420,6 +372,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
               </div>
             </div>
 
+            {/* Error de validación */}
             {loginError && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 animate-in fade-in duration-150">
                 <ShieldAlert className="w-4 h-4 shrink-0 text-red-600" />
@@ -427,6 +380,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
               </div>
             )}
 
+            {/* Botón: Iniciar Sesión */}
             <button
               type="submit"
               disabled={loginLoading}
@@ -438,8 +392,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            {/* Enlace de recuperación de contraseña */}
-            <div className="text-center pt-1 pb-1">
+            {/* Enlaces de Acción */}
+            <div className="flex flex-col items-center gap-2 pt-2 border-t border-slate-100">
+              {/* Enlace: ¿Olvidaste tu contraseña? */}
               <button
                 type="button"
                 onClick={() => {
@@ -449,35 +404,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
                   setResetEmail(loginEmail);
                 }}
                 id="btn-olvido-contrasena"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition py-1 px-2.5 rounded-lg cursor-pointer"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition py-1 cursor-pointer"
               >
-                <span>🔑</span>
-                <span>¿Olvidaste tu contraseña?</span>
+                🔑 ¿Olvidaste tu contraseña?
               </button>
-            </div>
 
-            {/* Accesos rápidos de demostración */}
-            <div className="border-t border-slate-100 pt-3 mt-1">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 text-center">
-                Cuentas predeterminadas para ingresar:
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {usuarios.slice(0, 3).map((u) => {
-                  const demoEmail = u.email || `${u.numeroUsuario.toLowerCase()}@myg.gt`;
-                  return (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => handleQuickLogin(u)}
-                      id={`quick-login-${u.numeroUsuario}`}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 hover:border-blue-300 border border-slate-200 text-[11px] text-left transition flex flex-col items-start cursor-pointer"
-                    >
-                      <span className="font-bold text-slate-800 truncate w-full">{u.numeroUsuario}</span>
-                      <span className="text-[10px] text-blue-600 truncate w-full">{demoEmail}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Enlace: ¿No tienes cuenta? Regístrate */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('registro');
+                  setRegError('');
+                  setRegSuccess('');
+                  setRegEmail(loginEmail);
+                }}
+                id="btn-ir-registro"
+                className="text-xs text-slate-600 hover:text-slate-900 transition py-1 cursor-pointer"
+              >
+                ¿No tienes cuenta? <span className="font-bold text-blue-600 hover:underline">Regístrate</span>
+              </button>
             </div>
           </form>
         )}
@@ -487,6 +432,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         {/* ----------------------------------------------------------- */}
         {activeTab === 'registro' && (
           <form onSubmit={handleRegistroSubmit} className="p-6 space-y-3.5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  Crear Cuenta
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('login')}
+                className="text-xs text-slate-500 hover:text-blue-600 font-semibold flex items-center gap-1 transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Volver</span>
+              </button>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
                 <span>👤 Nombre de Usuario o Código</span>

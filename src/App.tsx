@@ -89,12 +89,18 @@ export default function App() {
     // 5. Usuarios
     const unsubUsuarios = subscribeUsuarios((data) => {
       setUsuarios(data);
-      // Auto-iniciar sesión con ADMIN01 si no hay usuario en sesión activa
-      if (!localStorage.getItem('myg_user_session') && data.length > 0) {
-        const defaultAdmin = data.find((u) => u.numeroUsuario === 'ADMIN01') || data[0];
-        if (defaultAdmin) {
-          setCurrentUser(defaultAdmin);
-          localStorage.setItem('myg_user_session', JSON.stringify(defaultAdmin));
+      // Actualizar sesión actual si el usuario cambió en Firestore
+      const saved = localStorage.getItem('myg_user_session');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const updated = data.find((u) => u.numeroUsuario === parsed.numeroUsuario);
+          if (updated) {
+            setCurrentUser(updated);
+            localStorage.setItem('myg_user_session', JSON.stringify(updated));
+          }
+        } catch {
+          // ignore
         }
       }
     });
@@ -206,7 +212,11 @@ export default function App() {
           <CalendarioView
             vehiculos={vehiculos}
             servicios={servicios}
+            repuestosCatalogo={repuestos}
             onProgramarServicio={handleProgramarServicio}
+            onVerVehiculo={(placa) => {
+              setActiveTab('vehiculos');
+            }}
           />
         )}
 
