@@ -1357,15 +1357,15 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200 p-6">
             {/* Header del Reporte */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <img
                   src="/logo_talleres.png"
                   alt="Logo TALLERES E. GARCÍA"
-                  className="h-12 w-auto aspect-square object-contain rounded-lg border border-slate-200"
+                  className="h-20 sm:h-24 w-auto aspect-square object-contain rounded-2xl border border-slate-200 shadow-sm p-0.5"
                   referrerPolicy="no-referrer"
                 />
                 <div>
-                  <h3 className="font-black text-slate-900 text-lg uppercase">
+                  <h3 className="font-black text-slate-900 text-lg sm:text-xl uppercase">
                     TALLERES E. GARCÍA
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">

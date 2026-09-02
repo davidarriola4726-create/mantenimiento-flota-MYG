@@ -268,11 +268,11 @@ export const InformesView: React.FC<InformesViewProps> = ({
       >
         {/* Encabezado Oficial Membretado */}
         <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <img
               src="/logo_talleres.png"
               alt="Logo TALLERES E. GARCÍA"
-              className="h-11 w-auto aspect-square object-contain rounded-lg border border-slate-300"
+              className="h-20 sm:h-24 w-auto aspect-square object-contain rounded-2xl border border-slate-300 shadow-sm p-0.5"
               referrerPolicy="no-referrer"
             />
             <div>

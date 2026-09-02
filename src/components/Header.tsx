@@ -39,10 +39,10 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-md print:hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[72px] sm:min-h-[80px] py-2 sm:py-2.5 flex items-center justify-between gap-3">
         {/* Marca & Logo */}
         <div
-          className="flex items-center gap-3 cursor-pointer select-none group"
+          className="flex items-center gap-3.5 cursor-pointer select-none group"
           onClick={() => onSelectTab('vehiculos')}
           id="header-brand-logo"
         >
@@ -50,19 +50,19 @@ export const Header: React.FC<HeaderProps> = ({
             <img
               src="/logo_talleres.png"
               alt="Logo E. GARCÍA - TALLERES"
-              className="h-11 max-h-11 w-auto aspect-square object-contain rounded-xl shadow-md border border-slate-700/60 bg-slate-950 transition-transform group-hover:scale-105"
+              className="h-16 sm:h-20 max-h-20 w-auto aspect-square object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950 p-1 transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
               loading="eager"
             />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-black text-base sm:text-lg tracking-tight text-white leading-none">
+              <h1 className="font-black text-base sm:text-xl tracking-tight text-white leading-none">
                 E. GARCÍA <span className="text-blue-400 text-xs sm:text-sm font-bold">TALLERES</span>
               </h1>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Tiempo Real (Firebase)</span>
               </span>

@@ -299,18 +299,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Encabezado con branding corporativo */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 text-center relative">
-          <div className="relative mx-auto mb-3 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 sm:p-7 text-center relative">
+          <div className="relative mx-auto mb-3.5 flex items-center justify-center">
             <img
               src="/logo_talleres.png"
               alt="Logo E. GARCÍA - TALLERES"
-              className="h-16 w-auto aspect-square object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950/80"
+              className="h-32 sm:h-36 w-auto aspect-square object-contain rounded-2xl shadow-2xl border border-slate-700/60 bg-slate-950 p-1.5"
               referrerPolicy="no-referrer"
             />
           </div>
-          <h1 className="text-xl font-black tracking-tight uppercase">E. GARCÍA</h1>
-          <h2 className="text-sm font-bold text-blue-400 tracking-wide uppercase">TALLERES E. GARCÍA</h2>
-          <p className="text-xs text-blue-200 mt-1 font-medium">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase">E. GARCÍA</h1>
+          <h2 className="text-sm font-bold text-blue-400 tracking-wide uppercase mt-0.5">TALLERES E. GARCÍA</h2>
+          <p className="text-xs text-blue-200 mt-1.5 font-medium">
             Sistema de Control de Mantenimiento y Flota en Tiempo Real
           </p>
         </div>

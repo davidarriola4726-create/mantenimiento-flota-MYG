@@ -323,17 +323,17 @@ export default function App() {
       </main>
 
       {/* Pie de Página Oficial */}
-      <footer className="mt-12 border-t border-slate-200 bg-white py-6 px-4 print:hidden">
+      <footer className="mt-12 border-t border-slate-200 bg-white py-6 sm:py-8 px-4 print:hidden">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             <img
               src="/logo_talleres.png"
               alt="Logo TALLERES E. GARCÍA"
-              className="h-8 w-auto aspect-square object-contain rounded-lg border border-slate-200"
+              className="h-16 sm:h-20 w-auto aspect-square object-contain rounded-2xl border border-slate-200 shadow-sm p-0.5"
               referrerPolicy="no-referrer"
             />
             <div>
-              <p className="font-bold text-slate-800 text-sm">TALLERES E. GARCÍA</p>
+              <p className="font-bold text-slate-800 text-sm sm:text-base">TALLERES E. GARCÍA</p>
               <p className="text-[11px] text-slate-500">Sistema Integral de Control de Mantenimiento y Flota de Vehículos</p>
             </div>
           </div>

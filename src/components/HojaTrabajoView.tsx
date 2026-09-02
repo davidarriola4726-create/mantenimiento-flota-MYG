@@ -618,15 +618,15 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
             className="printable-document printable-area p-4 border border-slate-300 rounded-xl space-y-6 text-slate-900 print:p-0 print:border-none"
           >
             <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <img
                   src="/logo_talleres.png"
                   alt="Logo TALLERES E. GARCÍA"
-                  className="h-10 w-auto aspect-square object-contain rounded-lg border border-slate-300"
+                  className="h-20 sm:h-24 w-auto aspect-square object-contain rounded-2xl border border-slate-300 shadow-sm p-0.5"
                   referrerPolicy="no-referrer"
                 />
                 <div>
-                  <h1 className="text-xl font-black tracking-tight uppercase">TALLERES E. GARCÍA</h1>
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase">TALLERES E. GARCÍA</h1>
                   <p className="text-xs text-slate-600">Hoja de Trabajo y Servicio Técnico en Campo</p>
                 </div>
               </div>
