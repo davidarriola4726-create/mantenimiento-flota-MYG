@@ -322,6 +322,28 @@ export default function App() {
         )}
       </main>
 
+      {/* Pie de Página Oficial */}
+      <footer className="mt-12 border-t border-slate-200 bg-white py-6 px-4 print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo_talleres.png"
+              alt="Logo TALLERES E. GARCÍA"
+              className="h-8 w-auto aspect-square object-contain rounded-lg border border-slate-200"
+              referrerPolicy="no-referrer"
+            />
+            <div>
+              <p className="font-bold text-slate-800 text-sm">TALLERES E. GARCÍA</p>
+              <p className="text-[11px] text-slate-500">Sistema Integral de Control de Mantenimiento y Flota de Vehículos</p>
+            </div>
+          </div>
+          <div className="text-center sm:text-right text-[11px]">
+            <p className="font-semibold text-slate-700">TALLERES • Todos los derechos reservados</p>
+            <p className="text-slate-400">Sincronización en la Nube con Firebase Firestore</p>
+          </div>
+        </div>
+      </footer>
+
       {/* Modal de Inicio de Sesión si no hay sesión activa */}
       <LoginModal
         isOpen={!currentUser}

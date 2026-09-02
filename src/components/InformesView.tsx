@@ -93,7 +93,7 @@ export const InformesView: React.FC<InformesViewProps> = ({
 
   const handleExportarCSV = () => {
     const rows = [
-      ['MYG CONTROL DE MANTENIMIENTO - REPORTE OFICIAL'],
+      ['TALLERES E. GARCÍA - CONTROL DE VEHÍCULOS - REPORTE OFICIAL'],
       [`Generado: ${new Date().toLocaleString('es-GT')}`],
       [`Tipo de Informe: ${tipoInforme === 'vehiculo' ? `Vehículo Placa ${placaSeleccionada}` : `Rango ${fechaInicio} a ${fechaFin}`}`],
       [''],
@@ -137,7 +137,7 @@ export const InformesView: React.FC<InformesViewProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Reporte_MYG_${tipoInforme}_${Date.now()}.csv`);
+    link.setAttribute('download', `Reporte_Talleres_E_Garcia_${tipoInforme}_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -270,14 +270,14 @@ export const InformesView: React.FC<InformesViewProps> = ({
         <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
           <div className="flex items-center gap-3">
             <img
-              src="/logo_myg.png"
-              alt="Logo MYG"
-              className="h-11 w-auto object-contain rounded-lg border border-slate-300"
+              src="/logo_talleres.png"
+              alt="Logo TALLERES E. GARCÍA"
+              className="h-11 w-auto aspect-square object-contain rounded-lg border border-slate-300"
               referrerPolicy="no-referrer"
             />
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-950">
-                CONTROL DE VEHÍCULOS "MYG"
+              <h1 className="text-2xl font-black tracking-tight text-slate-950 uppercase">
+                TALLERES E. GARCÍA
               </h1>
               <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 Informe Oficial de Mantenimiento, Repuestos y Combustible
@@ -487,7 +487,7 @@ export const InformesView: React.FC<InformesViewProps> = ({
         <div className="grid grid-cols-2 gap-12 pt-12 text-center text-xs">
           <div className="border-t border-slate-400 pt-2">
             <span className="font-bold text-slate-900 block">Jefe de Taller y Mantenimiento</span>
-            <span className="text-slate-500">Control Flota MYG</span>
+            <span className="text-slate-500">TALLERES E. GARCÍA</span>
           </div>
           <div className="border-t border-slate-400 pt-2">
             <span className="font-bold text-slate-900 block">Administración / Gerencia General</span>

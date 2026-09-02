@@ -321,7 +321,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
             id="buscar-placa-input"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por número de placa (Ej: P-102MYG), piloto o tipo..."
+            placeholder="Buscar por número de placa (Ej: P-102ABC), piloto o tipo..."
             className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase"
           />
         </div>
@@ -384,7 +384,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {v.marcaModelo || 'Flota MYG'} {v.anio ? `(${v.anio})` : ''}
+                        {v.marcaModelo || 'Flota TALLERES'} {v.anio ? `(${v.anio})` : ''}
                       </p>
                     </div>
 
@@ -498,7 +498,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 print:text-slate-600 mt-0.5">
-                    Ficha y Subcarpeta Individual de Mantenimiento Flota MYG
+                    Ficha y Subcarpeta Individual de Mantenimiento - TALLERES E. GARCÍA
                   </p>
                 </div>
               </div>
@@ -685,7 +685,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                               </td>
                               <td className="p-3 text-slate-600">
                                 <span className="font-medium block text-slate-800">Chofer: {s.piloto}</span>
-                                <span className="block text-[11px] text-slate-500">Taller: {s.tecnico || 'MYG'}</span>
+                                <span className="block text-[11px] text-slate-500">Taller: {s.tecnico || 'TALLERES'}</span>
                               </td>
                               <td className="p-3">
                                 {s.repuestos && s.repuestos.length > 0 ? (
@@ -817,7 +817,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                     id="input-vehiculo-placa"
                     value={placaForm}
                     onChange={(e) => setPlacaForm(e.target.value.toUpperCase())}
-                    placeholder="Ej: P-102MYG, C-554MYG"
+                    placeholder="Ej: P-102ABC, C-554XYZ"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-black uppercase focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     required
                   />

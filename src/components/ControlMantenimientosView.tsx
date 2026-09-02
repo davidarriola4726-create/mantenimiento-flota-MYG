@@ -243,7 +243,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
         costoRepuestos: sumaTotalRepuestos,
         costoManoObra: Number(costoManoObra) || 0,
         costoTotal: costoTotalServicio,
-        tecnico: tecnicoNombre.trim() || 'Taller MYG',
+        tecnico: tecnicoNombre.trim() || 'TALLERES E. GARCÍA',
         descripcion: notasAdicionales.trim() || tipoProblema.trim(),
         estado: 'completado',
         creadoEn: new Date().toISOString(),
@@ -960,7 +960,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
                             {s.placa}
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium">
-                            {s.tecnico || 'Taller MYG'}
+                            {s.tecnico || 'TALLERES E. GARCÍA'}
                           </span>
                         </td>
 
@@ -1112,14 +1112,14 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
                 <div>
                   <div className="flex items-center gap-3">
                     <img
-                      src="/logo_myg.png"
-                      alt="Logo MYG"
-                      className="h-10 w-auto object-contain rounded-lg border border-slate-300"
+                      src="/logo_talleres.png"
+                      alt="Logo TALLERES E. GARCÍA"
+                      className="h-10 w-auto aspect-square object-contain rounded-lg border border-slate-300"
                       referrerPolicy="no-referrer"
                     />
                     <div>
-                      <h1 className="text-xl font-black tracking-tight text-slate-900">
-                        CONTROL DE VEHÍCULOS "MYG"
+                      <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
+                        TALLERES E. GARCÍA
                       </h1>
                       <p className="text-[11px] text-slate-500 font-bold uppercase">
                         Comprobante Oficial de Mantenimiento y Control de Taller
@@ -1314,7 +1314,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
                     ) : null}
                   </div>
                   <span className="block font-bold text-slate-800 mt-2">
-                    {servicioAImprimir.tecnico || 'Jefe de Taller MYG'}
+                    {servicioAImprimir.tecnico || 'Jefe de Taller - TALLERES E. GARCÍA'}
                   </span>
                   <span className="text-[10px] text-slate-500 uppercase">
                     Firma del Técnico / Taller
@@ -1352,7 +1352,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
                 </div>
                 <div>
                   <h3 className="font-bold text-base">Eliminar Mantenimiento</h3>
-                  <p className="text-xs text-red-100 font-medium">Control de Vehículos MYG</p>
+                  <p className="text-xs text-red-100 font-medium">TALLERES E. GARCÍA</p>
                 </div>
               </div>
               <button

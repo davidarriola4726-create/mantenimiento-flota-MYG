@@ -55,7 +55,7 @@ export const AlertasView: React.FC<AlertasViewProps> = ({ vehiculos, onProgramar
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900">Sistema de Alertas por Colores (MYG)</h2>
+            <h2 className="text-xl font-black text-slate-900">Sistema de Alertas por Colores (TALLERES)</h2>
             <p className="text-xs text-slate-500">
               Supervisión de vencimientos automáticos por Fecha Programada y por Kilometraje
             </p>

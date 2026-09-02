@@ -135,7 +135,7 @@ export const VercelModal: React.FC<VercelModalProps> = ({ isOpen, onClose }) => 
               <li>Sube este repositorio a tu cuenta de GitHub o GitLab.</li>
               <li>En Vercel, haz clic en <strong>Add New Project</strong> e importa el repositorio.</li>
               <li>En la sección <strong>Environment Variables</strong>, pega las variables de arriba.</li>
-              <li>Haz clic en <strong>Deploy</strong>. Tu app MYG estará en línea sincronizada en tiempo real.</li>
+              <li>Haz clic en <strong>Deploy</strong>. Tu app TALLERES E. GARCÍA estará en línea sincronizada en tiempo real.</li>
             </ol>
           </div>
         </div>

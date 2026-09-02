@@ -302,15 +302,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 text-center relative">
           <div className="relative mx-auto mb-3 flex items-center justify-center">
             <img
-              src="/logo_myg.png"
-              alt="Logo Control de Vehículos MYG"
-              className="h-16 w-auto object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950/80"
+              src="/logo_talleres.png"
+              alt="Logo E. GARCÍA - TALLERES"
+              className="h-16 w-auto aspect-square object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950/80"
               referrerPolicy="no-referrer"
             />
           </div>
-          <h1 className="text-xl font-black tracking-tight">CONTROL DE VEHÍCULOS "MYG"</h1>
+          <h1 className="text-xl font-black tracking-tight uppercase">E. GARCÍA</h1>
+          <h2 className="text-sm font-bold text-blue-400 tracking-wide uppercase">TALLERES E. GARCÍA</h2>
           <p className="text-xs text-blue-200 mt-1 font-medium">
-            Sistema de Mantenimiento y Flota en Tiempo Real
+            Sistema de Control de Mantenimiento y Flota en Tiempo Real
           </p>
         </div>
 
@@ -334,7 +335,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
                     setLoginEmail(e.target.value);
                     if (loginError) setLoginError('');
                   }}
-                  placeholder="ejemplo@myg.gt"
+                  placeholder="usuario@talleresegarcia.com"
                   className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   required
@@ -485,7 +486,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
                     setRegEmail(e.target.value);
                     if (regError) setRegError('');
                   }}
-                  placeholder="tecnico@myg.gt"
+                  placeholder="tecnico@talleresegarcia.com"
                   className="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -620,7 +621,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
                     setResetEmail(e.target.value);
                     if (resetError) setResetError('');
                   }}
-                  placeholder="ejemplo@myg.gt"
+                  placeholder="usuario@talleresegarcia.com"
                   className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   required

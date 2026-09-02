@@ -350,7 +350,7 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
     setFormTipoMantenimiento('Preventivo');
     setFormTipoServicio('Mantenimiento Preventivo / Cambio de Aceite');
     setFormDescripcion('');
-    setFormTecnico('Taller Central MYG');
+    setFormTecnico('TALLERES E. GARCÍA');
     setFormCostoManoObra(200);
     setFormRepuestos([
       { nombre: 'Aceite de Motor Sintético 15W-40', cantidad: 1, precio: 280, total: 280 },
@@ -426,7 +426,7 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
         descripcion: formDescripcion.trim() || `${formTipoMantenimiento}: ${formTipoServicio}`,
         fecha: formFecha,
         kilometraje: Number(formKilometraje) || 0,
-        tecnico: formTecnico.trim() || 'Taller MYG',
+        tecnico: formTecnico.trim() || 'TALLERES E. GARCÍA',
         proximaFecha: formProximaFecha || undefined,
         proximoKm: Number(formProximoKm) || undefined,
         repuestos: formRepuestos.filter((r) => r.nombre.trim()),
@@ -989,7 +989,7 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
                         )}
 
                         <div className="pt-2 flex items-center justify-between text-[10px] text-slate-500 border-t border-black/5">
-                          <span>Técnico: {ev.servicio.tecnico || 'MYG'}</span>
+                          <span>Técnico: {ev.servicio.tecnico || 'TALLERES E. GARCÍA'}</span>
                           <span>Km: {ev.servicio.kilometraje?.toLocaleString() || 'N/A'}</span>
                         </div>
                       </div>
@@ -1192,7 +1192,7 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
                   type="text"
                   value={formTecnico}
                   onChange={(e) => setFormTecnico(e.target.value)}
-                  placeholder="Ej: Taller Central MYG / Tec. Carlos Pérez"
+                  placeholder="Ej: TALLERES E. GARCÍA / Tec. Carlos Pérez"
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
@@ -1359,14 +1359,14 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="/logo_myg.png"
-                  alt="Logo MYG"
-                  className="h-12 w-auto object-contain rounded-lg border border-slate-200"
+                  src="/logo_talleres.png"
+                  alt="Logo TALLERES E. GARCÍA"
+                  className="h-12 w-auto aspect-square object-contain rounded-lg border border-slate-200"
                   referrerPolicy="no-referrer"
                 />
                 <div>
-                  <h3 className="font-black text-slate-900 text-lg">
-                    CONTROL DE VEHÍCULOS "MYG"
+                  <h3 className="font-black text-slate-900 text-lg uppercase">
+                    TALLERES E. GARCÍA
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
                     Informe Consolidado de Mantenimiento - {mesesNombres[month]} {year}

@@ -214,7 +214,7 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900">Hoja de Trabajo en Campo (MYG)</h2>
+            <h2 className="text-xl font-black text-slate-900">Hoja de Trabajo en Campo (TALLERES)</h2>
             <p className="text-xs text-slate-500">
               Orden de servicio digital, repuestos en Q, firmas digitales y cálculo automático
             </p>
@@ -620,13 +620,13 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
             <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="/logo_myg.png"
-                  alt="Logo MYG"
-                  className="h-10 w-auto object-contain rounded-lg border border-slate-300"
+                  src="/logo_talleres.png"
+                  alt="Logo TALLERES E. GARCÍA"
+                  className="h-10 w-auto aspect-square object-contain rounded-lg border border-slate-300"
                   referrerPolicy="no-referrer"
                 />
                 <div>
-                  <h1 className="text-xl font-black tracking-tight">CONTROL DE VEHÍCULOS "MYG"</h1>
+                  <h1 className="text-xl font-black tracking-tight uppercase">TALLERES E. GARCÍA</h1>
                   <p className="text-xs text-slate-600">Hoja de Trabajo y Servicio Técnico en Campo</p>
                 </div>
               </div>

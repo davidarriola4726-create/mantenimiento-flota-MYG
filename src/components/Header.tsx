@@ -48,9 +48,9 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <div className="relative shrink-0 flex items-center justify-center">
             <img
-              src="/logo_myg.png"
-              alt="Logo Control de Vehículos MYG"
-              className="h-[45px] max-h-[45px] w-auto object-contain rounded-xl shadow-md border border-slate-700/60 bg-slate-950 transition-transform group-hover:scale-105"
+              src="/logo_talleres.png"
+              alt="Logo E. GARCÍA - TALLERES"
+              className="h-11 max-h-11 w-auto aspect-square object-contain rounded-xl shadow-md border border-slate-700/60 bg-slate-950 transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
               loading="eager"
             />
@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-black text-base sm:text-lg tracking-tight text-white leading-none">
-                CONTROL DE VEHÍCULOS <span className="text-blue-400">"MYG"</span>
+                E. GARCÍA <span className="text-blue-400 text-xs sm:text-sm font-bold">TALLERES</span>
               </h1>
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -159,7 +159,10 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
               <div className="hidden sm:block text-right">
                 <span className="block text-xs font-bold text-white">
-                  Técnico MYG
+                  {currentUser.nombre || 'E. GARCÍA'}
+                </span>
+                <span className="block text-[10px] text-blue-300 capitalize font-medium">
+                  {currentUser.rol} • TALLERES E. GARCÍA
                 </span>
               </div>
 

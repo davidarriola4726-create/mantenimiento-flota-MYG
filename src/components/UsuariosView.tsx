@@ -50,7 +50,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
         id: cleanUser,
         numeroUsuario: cleanUser,
         nombre: nombre.trim(),
-        email: cleanEmail || `${cleanUser.toLowerCase()}@myg.gt`,
+        email: cleanEmail || `${cleanUser.toLowerCase()}@talleresegarcia.com`,
         password: password.trim(),
         rol,
         creadoEn: new Date().toISOString(),
@@ -80,7 +80,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-black text-slate-900">Control de Usuarios y Seguridad</h2>
-              <p className="text-xs text-slate-500">Gestión de accesos, roles y contraseñas de la flota MYG</p>
+              <p className="text-xs text-slate-500">Gestión de accesos, roles y contraseñas de TALLERES E. GARCÍA</p>
             </div>
           </div>
         </div>
@@ -248,7 +248,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="ejemplo@myg.gt"
+                  placeholder="usuario@talleresegarcia.com"
                 />
               </div>
 

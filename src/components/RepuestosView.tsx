@@ -276,7 +276,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse" id="tabla-repuestos-myg">
+          <table className="w-full text-left border-collapse" id="tabla-repuestos-talleres">
             <thead>
               <tr className="bg-slate-100 text-slate-700 text-xs uppercase font-extrabold tracking-wider border-b border-slate-200">
                 <th className="py-3.5 px-5 w-2/3 border-r border-slate-200">
@@ -489,7 +489,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
                 </div>
                 <div>
                   <h3 className="font-bold text-base">Eliminar Repuesto</h3>
-                  <p className="text-xs text-red-100 font-medium">Catálogo de Repuestos MYG</p>
+                  <p className="text-xs text-red-100 font-medium">Catálogo de Repuestos TALLERES E. GARCÍA</p>
                 </div>
               </div>
               <button

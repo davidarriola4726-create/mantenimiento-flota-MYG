@@ -307,7 +307,7 @@ export async function inicializarDatosPredeterminados(): Promise<void> {
         {
           id: 'ADMIN01',
           numeroUsuario: 'ADMIN01',
-          nombre: 'Administrador General MYG',
+          nombre: 'Administrador General - TALLERES E. GARCÍA',
           email: 'admin@myg.gt',
           password: 'admin',
           rol: 'admin',
