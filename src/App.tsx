@@ -78,12 +78,12 @@ export default function App() {
     if (currentUser && audioEnabled) {
       // Intentar reproducción inmediata
       const timer = setTimeout(() => {
-        reproducirSaludoAudio(audioGreetingRef.current, false);
+        reproducirSaludoAudio(audioGreetingRef.current, false, currentUser.nombre);
       }, 400);
 
       // Manejo del bloqueo de autoplay en navegadores (reproducir al primer clic / toque del usuario)
       const handlePrimerInteract = () => {
-        reproducirSaludoAudio(audioGreetingRef.current, false);
+        reproducirSaludoAudio(audioGreetingRef.current, false, currentUser.nombre);
         window.removeEventListener('click', handlePrimerInteract);
         window.removeEventListener('keydown', handlePrimerInteract);
         window.removeEventListener('touchstart', handlePrimerInteract);
@@ -107,12 +107,12 @@ export default function App() {
     setAudioEnabled(nuevoEstado);
     setAudioSaludoEnabled(nuevoEstado);
     if (nuevoEstado) {
-      reproducirSaludoAudio(audioGreetingRef.current, true);
+      reproducirSaludoAudio(audioGreetingRef.current, true, currentUser?.nombre);
     }
   };
 
   const handlePlayGreeting = () => {
-    reproducirSaludoAudio(audioGreetingRef.current, true);
+    reproducirSaludoAudio(audioGreetingRef.current, true, currentUser?.nombre);
   };
 
   // Inicialización y suscripciones Firestore en tiempo real
@@ -180,7 +180,7 @@ export default function App() {
     localStorage.setItem('myg_user_session', JSON.stringify(user));
     // Saludo de audio inmediato tras iniciar sesión
     setTimeout(() => {
-      reproducirSaludoAudio(audioGreetingRef.current, true);
+      reproducirSaludoAudio(audioGreetingRef.current, true, user.nombre);
     }, 350);
   };
 

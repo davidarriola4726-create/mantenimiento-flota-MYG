@@ -3,7 +3,7 @@
  * Saludo de bienvenida para CONTROL DE VEHÍCULOS "MYG"
  */
 
-const SALUDO_TEXTO = 'Bienvenidos al Sistema MYG';
+const SALUDO_TEXTO_DEFAULT = '¡Bienvenidos al Sistema MYG!';
 const STORAGE_KEY_AUDIO = 'myg_audio_saludo_enabled';
 const SESSION_KEY_PLAYED = 'myg_audio_saludo_reproducido';
 
@@ -67,15 +67,27 @@ const buscarVozFemeninaEspanol = (): SpeechSynthesisVoice | null => {
 };
 
 /**
+ * Genera el texto del saludo optimizado y natural
+ */
+export const obtenerTextoSaludo = (nombreUsuario?: string | null): string => {
+  if (nombreUsuario && nombreUsuario.trim()) {
+    // Si hay un nombre como "Ronald", dice "Bienvenido Ronald, a tu sistema"
+    const primerNombre = nombreUsuario.trim().split(' ')[0];
+    return `¡Bienvenido ${primerNombre}, a tu sistema!`;
+  }
+  return '¡Bienvenidos al Sistema MYG!';
+};
+
+/**
  * Reproduce el saludo de audio utilizando la etiqueta HTML5 Audio o Web Speech API:
- * - Mensaje: "Bienvenidos al Sistema MYG"
  * - Volumen: 70% (0.70)
  * - Reproduce una sola vez (controlado por sessionStorage)
  * - Sin bucles
  */
 export const reproducirSaludoAudio = (
   audioElement?: HTMLAudioElement | null,
-  force = false
+  force = false,
+  nombreUsuario?: string | null
 ): boolean => {
   if (typeof window === 'undefined') return false;
 
@@ -89,6 +101,8 @@ export const reproducirSaludoAudio = (
     return false;
   }
 
+  const texto = obtenerTextoSaludo(nombreUsuario);
+
   // 1. Intentar reproducir desde elemento HTML5 Audio si tiene fuente válida
   if (audioElement && audioElement.src && audioElement.src !== window.location.href && !audioElement.src.endsWith('/')) {
     try {
@@ -101,8 +115,8 @@ export const reproducirSaludoAudio = (
             sessionStorage.setItem(SESSION_KEY_PLAYED, 'true');
           })
           .catch((error) => {
-            console.warn('Autoplay bloqueado por el navegador, recurriendo a Web Speech / clic:', error);
-            reproducirVozDirecta(force);
+            console.warn('Autoplay bloqueado por el navegador, recurriendo a Web Speech:', error);
+            reproducirVozDirecta(force, texto);
           });
         return true;
       }
@@ -112,10 +126,10 @@ export const reproducirSaludoAudio = (
   }
 
   // 2. Reproducción a través de síntesis vocal nativa humanizada (Web Speech API)
-  return reproducirVozDirecta(force);
+  return reproducirVozDirecta(force, texto);
 };
 
-const reproducirVozDirecta = (force = false): boolean => {
+const reproducirVozDirecta = (force = false, textoCustom?: string): boolean => {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     return false;
   }
@@ -123,12 +137,12 @@ const reproducirVozDirecta = (force = false): boolean => {
   try {
     window.speechSynthesis.cancel();
 
-    // Texto fonéticamente optimizado para pronunciar "M Y G" con calidez natural
-    const utterance = new SpeechSynthesisUtterance('Bienvenidos al Sistema M Y G');
+    const texto = textoCustom || SALUDO_TEXTO_DEFAULT;
+    const utterance = new SpeechSynthesisUtterance(texto);
 
-    utterance.volume = 0.70; // Volumen al 70% (suave y agradable)
-    utterance.rate = 0.85;   // Velocidad tranquila y pausada
-    utterance.pitch = 1.08;  // Tono femenino cálido y dulce
+    utterance.volume = 0.70; // Volumen exacto al 70% (suave y agradable)
+    utterance.rate = 0.84;   // Velocidad tranquila y pausada
+    utterance.pitch = 1.08;  // Tono femenino cálido, suave y dulce
     utterance.lang = 'es-ES';
 
     const voz = buscarVozFemeninaEspanol();
@@ -156,7 +170,7 @@ const reproducirVozDirecta = (force = false): boolean => {
   }
 };
 
-export const reproducirSaludoVoz = (force = false): boolean => {
-  return reproducirSaludoAudio(null, force);
+export const reproducirSaludoVoz = (force = false, nombreUsuario?: string | null): boolean => {
+  return reproducirSaludoAudio(null, force, nombreUsuario);
 };
 
