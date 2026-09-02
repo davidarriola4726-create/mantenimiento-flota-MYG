@@ -345,10 +345,11 @@ export default function App() {
         onClose={() => setVercelModalAbierto(false)}
       />
 
-      {/* Elemento HTML5 Audio para reproducción de saludo de audio sin controles visibles */}
+      {/* Elemento HTML5 Audio para reproducción de saludo de audio real sin controles visibles */}
       <audio
         ref={audioGreetingRef}
         id="audio-saludo-myg"
+        src="/audio/saludo.mp3"
         preload="auto"
         className="hidden"
         aria-hidden="true"

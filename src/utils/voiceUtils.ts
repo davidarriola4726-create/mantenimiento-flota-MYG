@@ -79,12 +79,12 @@ const formatearNombreFonetico = (nombre?: string | null): string => {
 };
 
 /**
- * Reproduce el saludo de audio utilizando la etiqueta HTML5 Audio o Web Speech API:
- * Mensaje exacto: "Bienvenido a tu sistema... Ronald"
- * - Pausa antes del nombre
- * - Articulación pausada y clara con énfasis RO-nald
- * - Volumen al 70% (con ligero realce al decir Ronald)
- * - Reproduce una sola vez (controlado por sessionStorage)
+ * Reproduce el saludo de audio utilizando la etiqueta HTML5 Audio (archivo MP3 real) o Web Speech API:
+ * - Archivo de audio MP3 real
+ * - Volumen: 70% (0.70)
+ * - Reproduce una sola vez por sesión (controlado por sessionStorage)
+ * - Sin bucles (loop: false)
+ * - Compatible con navegadores móviles y de escritorio
  */
 export const reproducirSaludoAudio = (
   audioElement?: HTMLAudioElement | null,
@@ -103,11 +103,16 @@ export const reproducirSaludoAudio = (
     return false;
   }
 
-  // 1. Intentar reproducir desde elemento HTML5 Audio si tiene fuente válida
-  if (audioElement && audioElement.src && audioElement.src !== window.location.href && !audioElement.src.endsWith('/')) {
+  // 1. Intentar reproducir desde elemento HTML5 Audio con el archivo MP3
+  if (audioElement) {
     try {
-      audioElement.volume = 0.70;
-      audioElement.loop = false;
+      if (!audioElement.src || audioElement.src === window.location.href) {
+        audioElement.src = '/audio/saludo.mp3';
+      }
+      audioElement.volume = 0.70; // 70% volumen (suave y agradable)
+      audioElement.loop = false;  // Sin bucle
+      audioElement.currentTime = 0;
+
       const playPromise = audioElement.play();
       if (playPromise !== undefined) {
         playPromise
@@ -115,7 +120,8 @@ export const reproducirSaludoAudio = (
             sessionStorage.setItem(SESSION_KEY_PLAYED, 'true');
           })
           .catch((error) => {
-            console.warn('Autoplay bloqueado por el navegador, recurriendo a Web Speech:', error);
+            console.warn('Autoplay bloqueado por el navegador o interacción requerida:', error);
+            // Intentar síntesis de voz en caso de que el elemento de audio esté restringido
             reproducirVozDirecta(force, nombreUsuario);
           });
         return true;
@@ -125,7 +131,27 @@ export const reproducirSaludoAudio = (
     }
   }
 
-  // 2. Reproducción a través de síntesis vocal nativa humanizada (Web Speech API)
+  // 2. Si no hay elemento de audio, crear objeto Audio dinámico para reproducir el MP3
+  try {
+    const audioObj = new Audio('/audio/saludo.mp3');
+    audioObj.volume = 0.70;
+    audioObj.loop = false;
+    const playPromise = audioObj.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          sessionStorage.setItem(SESSION_KEY_PLAYED, 'true');
+        })
+        .catch(() => {
+          reproducirVozDirecta(force, nombreUsuario);
+        });
+      return true;
+    }
+  } catch {
+    // Continuar a fallback
+  }
+
+  // 3. Fallback a través de síntesis vocal nativa humanizada (Web Speech API)
   return reproducirVozDirecta(force, nombreUsuario);
 };
 
