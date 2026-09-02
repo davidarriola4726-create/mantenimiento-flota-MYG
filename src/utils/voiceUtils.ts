@@ -3,7 +3,7 @@
  * Saludo de bienvenida para CONTROL DE VEHÍCULOS "MYG"
  */
 
-const SALUDO_TEXTO_DEFAULT = '¡Bienvenidos al Sistema MYG!';
+const SALUDO_TEXTO_DEFAULT = '¡Hola Ronald, bienvenido a tu sistema!';
 const STORAGE_KEY_AUDIO = 'myg_audio_saludo_enabled';
 const SESSION_KEY_PLAYED = 'myg_audio_saludo_reproducido';
 
@@ -71,11 +71,10 @@ const buscarVozFemeninaEspanol = (): SpeechSynthesisVoice | null => {
  */
 export const obtenerTextoSaludo = (nombreUsuario?: string | null): string => {
   if (nombreUsuario && nombreUsuario.trim()) {
-    // Si hay un nombre como "Ronald", dice "Bienvenido Ronald, a tu sistema"
     const primerNombre = nombreUsuario.trim().split(' ')[0];
-    return `¡Bienvenido ${primerNombre}, a tu sistema!`;
+    return `¡Hola ${primerNombre}, bienvenido a tu sistema!`;
   }
-  return '¡Bienvenidos al Sistema MYG!';
+  return '¡Hola Ronald, bienvenido a tu sistema!';
 };
 
 /**
