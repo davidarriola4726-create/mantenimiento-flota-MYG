@@ -3,7 +3,8 @@
  * Saludo de bienvenida para Sistema de Control de Vehículos MYG
  */
 
-const SALUDO_TEXTO_DEFAULT = 'Bienvenido a tu sistema';
+export const AUDIO_SALUDO_URL = 'https://drive.google.com/uc?export=download&id=1nKXmo6vWO967u2k6jeCjdWM617eH1xBP';
+const SALUDO_TEXTO_DEFAULT = 'Bienvenido a tu sistema MYG';
 const STORAGE_KEY_AUDIO = 'myg_audio_saludo_enabled';
 const SESSION_KEY_PLAYED = 'myg_audio_saludo_reproducido';
 
@@ -103,11 +104,11 @@ export const reproducirSaludoAudio = (
     return false;
   }
 
-  // 1. Intentar reproducir desde elemento HTML5 Audio con el archivo MP3
+  // 1. Intentar reproducir desde elemento HTML5 Audio con el enlace oficial de audio
   if (audioElement) {
     try {
       if (!audioElement.src || audioElement.src === window.location.href) {
-        audioElement.src = '/audio/saludo.mp3';
+        audioElement.src = AUDIO_SALUDO_URL;
       }
       audioElement.volume = 0.70; // 70% volumen (suave y agradable)
       audioElement.loop = false;  // Sin bucle
@@ -121,8 +122,15 @@ export const reproducirSaludoAudio = (
           })
           .catch((error) => {
             console.warn('Autoplay bloqueado por el navegador o interacción requerida:', error);
-            // Intentar síntesis de voz en caso de que el elemento de audio esté restringido
-            reproducirVozDirecta(force, nombreUsuario);
+            // Intentar con archivo local de respaldo si la conexión remota tiene restricción
+            if (audioElement.src !== '/audio/saludo.mp3') {
+              audioElement.src = '/audio/saludo.mp3';
+              audioElement.play().catch(() => {
+                reproducirVozDirecta(force, nombreUsuario);
+              });
+            } else {
+              reproducirVozDirecta(force, nombreUsuario);
+            }
           });
         return true;
       }
@@ -133,7 +141,7 @@ export const reproducirSaludoAudio = (
 
   // 2. Si no hay elemento de audio, crear objeto Audio dinámico para reproducir el MP3
   try {
-    const audioObj = new Audio('/audio/saludo.mp3');
+    const audioObj = new Audio(AUDIO_SALUDO_URL);
     audioObj.volume = 0.70;
     audioObj.loop = false;
     const playPromise = audioObj.play();
@@ -143,7 +151,11 @@ export const reproducirSaludoAudio = (
           sessionStorage.setItem(SESSION_KEY_PLAYED, 'true');
         })
         .catch(() => {
-          reproducirVozDirecta(force, nombreUsuario);
+          const localFallback = new Audio('/audio/saludo.mp3');
+          localFallback.volume = 0.70;
+          localFallback.play().catch(() => {
+            reproducirVozDirecta(force, nombreUsuario);
+          });
         });
       return true;
     }
@@ -166,9 +178,9 @@ const reproducirVozDirecta = (force = false, nombreUsuario?: string | null): boo
     const voz = buscarVozFemeninaEspanol();
     const nombreFonetico = formatearNombreFonetico(nombreUsuario);
 
-    // PARTE 1: "Bienvenido a tu sistema"
+    // PARTE 1: "Bienvenido a tu sistema MYG"
     // Voz pausada, clara y articulada
-    const frase1 = new SpeechSynthesisUtterance('Bienvenido a tu sistema');
+    const frase1 = new SpeechSynthesisUtterance('Bienvenido a tu sistema MYG');
     frase1.volume = 0.70;
     frase1.rate = 0.80;   // Velocidad pausada y tranquila para pronunciar cada letra
     frase1.pitch = 1.06;  // Tono cálido, dulce y claro

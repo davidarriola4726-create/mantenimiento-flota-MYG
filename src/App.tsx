@@ -371,7 +371,7 @@ export default function App() {
       <audio
         ref={audioGreetingRef}
         id="audio-saludo-myg"
-        src="/audio/saludo.mp3"
+        src="https://drive.google.com/uc?export=download&id=1nKXmo6vWO967u2k6jeCjdWM617eH1xBP"
         preload="auto"
         className="hidden"
         aria-hidden="true"
