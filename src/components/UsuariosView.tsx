@@ -80,7 +80,7 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-black text-slate-900">Control de Usuarios y Seguridad</h2>
-              <p className="text-xs text-slate-500">Gestión de accesos, roles y contraseñas de TALLERES E. GARCÍA</p>
+              <p className="text-xs text-slate-500">Gestión de accesos, roles y contraseñas de Sistema de Control de Vehículos MYG</p>
             </div>
           </div>
         </div>
@@ -115,10 +115,22 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold">{currentUser.nombre}</span>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 uppercase">
-                {currentUser.rol}
+              <span className="text-base font-bold">
+                {currentUser.nombre.replace(/\s*-\s*TALLERES E\. GARCÍA/gi, '').replace(/\s*-\s*Sistema M[Y]?G/gi, '')}
               </span>
+              {/* En lugar del texto 'Administrador', muestra este mismo logo en tamaño pequeño al lado del nombre */}
+              {currentUser.rol === 'admin' ? (
+                <img
+                  src="/logo_myg.png"
+                  alt="Logo MYG"
+                  className="h-5 sm:h-6 w-auto max-w-[32px] object-contain rounded-md border border-slate-300 bg-white p-0.5 shadow-sm inline-block"
+                  title="Sistema de Control de Vehículos MYG"
+                />
+              ) : (
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 uppercase">
+                  {currentUser.rol}
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-300 mt-0.5">
               Número de Usuario: <strong className="font-mono text-white">{currentUser.numeroUsuario}</strong> • Sesión activa
@@ -156,13 +168,25 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm">{u.nombre}</span>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {u.nombre.replace(/\s*-\s*TALLERES E\. GARCÍA/gi, '').replace(/\s*-\s*Sistema M[Y]?G/gi, '')}
+                    </span>
+                    {u.rol === 'admin' && (
+                      <img
+                        src="/logo_myg.png"
+                        alt="Logo MYG"
+                        className="h-5 w-auto max-w-[28px] object-contain rounded-md border border-slate-300 bg-white p-0.5 shadow-xs shrink-0"
+                        title="Sistema de Control de Vehículos MYG"
+                      />
+                    )}
                     <span className="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                       {u.numeroUsuario}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                    <span className="capitalize font-medium">Rol: {u.rol}</span>
+                    <span className="capitalize font-medium">
+                      {u.rol === 'admin' ? 'Acceso General MYG' : `Rol: ${u.rol}`}
+                    </span>
                     {u.email && (
                       <>
                         <span>•</span>
@@ -176,12 +200,18 @@ export const UsuariosView: React.FC<UsuariosViewProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase ${
-                  u.rol === 'admin' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                  u.rol === 'tecnico' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                }`}>
-                  {u.rol}
-                </span>
+                {u.rol === 'admin' ? (
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-900 text-blue-300 border border-slate-700 flex items-center gap-1.5 shadow-xs">
+                    <img src="/logo_myg.png" alt="MYG" className="h-3.5 w-auto max-w-[20px] object-contain rounded-xs bg-white p-0.5" />
+                    <span>MYG</span>
+                  </span>
+                ) : (
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase ${
+                    u.rol === 'tecnico' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    {u.rol}
+                  </span>
+                )}
               </div>
             </div>
           ))}

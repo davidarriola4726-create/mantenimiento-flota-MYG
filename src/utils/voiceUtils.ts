@@ -1,6 +1,6 @@
 /**
  * Utilidad de Audio y Síntesis de Voz
- * Saludo de bienvenida para TALLERES - TALLERES E. GARCÍA
+ * Saludo de bienvenida para Sistema de Control de Vehículos MYG
  */
 
 const SALUDO_TEXTO_DEFAULT = 'Bienvenido a tu sistema';

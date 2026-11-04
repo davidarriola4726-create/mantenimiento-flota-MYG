@@ -631,7 +631,7 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
                 </div>
                 <div>
                   <h3 className="font-bold text-base">Eliminar Registro de Combustible</h3>
-                  <p className="text-xs text-red-100 font-medium">TALLERES E. GARCÍA</p>
+                  <p className="text-xs text-red-100 font-medium">Sistema de Control de Vehículos MYG</p>
                 </div>
               </div>
               <button

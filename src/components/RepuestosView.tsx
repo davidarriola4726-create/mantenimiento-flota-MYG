@@ -489,7 +489,7 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
                 </div>
                 <div>
                   <h3 className="font-bold text-base">Eliminar Repuesto</h3>
-                  <p className="text-xs text-red-100 font-medium">Catálogo de Repuestos TALLERES E. GARCÍA</p>
+                  <p className="text-xs text-red-100 font-medium">Catálogo de Repuestos - Sistema de Control de Vehículos MYG</p>
                 </div>
               </div>
               <button

@@ -302,16 +302,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 sm:p-7 text-center relative">
           <div className="relative mx-auto mb-3.5 flex items-center justify-center">
             <img
-              src="/logo_talleres.png"
-              alt="Logo E. GARCÍA - TALLERES"
-              className="h-32 sm:h-36 w-auto aspect-square object-contain rounded-2xl shadow-2xl border border-slate-700/60 bg-slate-950 p-1.5"
+              src="/logo_myg.png"
+              alt="Logo Sistema de Control de Vehículos MYG"
+              className="h-24 sm:h-28 w-auto max-w-[240px] object-contain rounded-2xl shadow-2xl border border-slate-300 bg-white p-2"
               referrerPolicy="no-referrer"
             />
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase">E. GARCÍA</h1>
-          <h2 className="text-sm font-bold text-blue-400 tracking-wide uppercase mt-0.5">TALLERES E. GARCÍA</h2>
-          <p className="text-xs text-blue-200 mt-1.5 font-medium">
-            Sistema de Control de Mantenimiento y Flota en Tiempo Real
+          <h1 className="text-lg sm:text-xl font-black tracking-tight uppercase">Sistema de Control de Vehículos MYG</h1>
+          <p className="text-xs text-blue-200 mt-1 font-medium">
+            Control de Mantenimiento y Flota en Tiempo Real
           </p>
         </div>
 

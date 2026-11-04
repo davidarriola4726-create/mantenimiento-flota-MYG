@@ -327,18 +327,18 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-3.5">
             <img
-              src="/logo_talleres.png"
-              alt="Logo TALLERES E. GARCÍA"
-              className="h-16 sm:h-20 w-auto aspect-square object-contain rounded-2xl border border-slate-200 shadow-sm p-0.5"
+              src="/logo_myg.png"
+              alt="Logo Sistema de Control de Vehículos MYG"
+              className="h-14 sm:h-16 w-auto max-w-[160px] object-contain rounded-xl border border-slate-200 shadow-sm p-1 bg-white"
               referrerPolicy="no-referrer"
             />
             <div>
-              <p className="font-bold text-slate-800 text-sm sm:text-base">TALLERES E. GARCÍA</p>
-              <p className="text-[11px] text-slate-500">Sistema Integral de Control de Mantenimiento y Flota de Vehículos</p>
+              <p className="font-bold text-slate-800 text-sm sm:text-base">Sistema de Control de Vehículos MYG</p>
+              <p className="text-[11px] text-slate-500">Gestión Integral de Mantenimiento y Control de Flota</p>
             </div>
           </div>
           <div className="text-center sm:text-right text-[11px]">
-            <p className="font-semibold text-slate-700">TALLERES • Todos los derechos reservados</p>
+            <p className="font-semibold text-slate-700">Sistema de Control de Vehículos MYG • Todos los derechos reservados</p>
             <p className="text-slate-400">Sincronización en la Nube con Firebase Firestore</p>
           </div>
         </div>

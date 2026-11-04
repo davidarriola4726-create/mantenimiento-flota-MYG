@@ -384,7 +384,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {v.marcaModelo || 'Flota TALLERES'} {v.anio ? `(${v.anio})` : ''}
+                        {v.marcaModelo || 'Flota MYG'} {v.anio ? `(${v.anio})` : ''}
                       </p>
                     </div>
 
@@ -485,6 +485,12 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
             {/* Cabecera Ficha */}
             <div className="p-6 bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:bg-white print:text-black print:p-4 print:border-b-2 print:border-slate-900">
               <div className="flex items-center gap-3">
+                <img
+                  src="/logo_myg.png"
+                  alt="Logo Sistema de Control de Vehículos MYG"
+                  className="h-14 sm:h-16 w-auto max-w-[160px] object-contain rounded-xl border border-slate-300 shadow-sm p-1 bg-white print:block"
+                  referrerPolicy="no-referrer"
+                />
                 <div className="p-3 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-400/30 print:hidden">
                   <FolderOpen className="w-7 h-7" />
                 </div>
@@ -498,7 +504,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 print:text-slate-600 mt-0.5">
-                    Ficha y Subcarpeta Individual de Mantenimiento - TALLERES E. GARCÍA
+                    Ficha y Subcarpeta Individual de Mantenimiento - Sistema de Control de Vehículos MYG
                   </p>
                 </div>
               </div>
@@ -685,7 +691,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                               </td>
                               <td className="p-3 text-slate-600">
                                 <span className="font-medium block text-slate-800">Chofer: {s.piloto}</span>
-                                <span className="block text-[11px] text-slate-500">Taller: {s.tecnico || 'TALLERES'}</span>
+                                <span className="block text-[11px] text-slate-500">Taller: {s.tecnico || 'Sistema MYG'}</span>
                               </td>
                               <td className="p-3">
                                 {s.repuestos && s.repuestos.length > 0 ? (

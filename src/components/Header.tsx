@@ -48,20 +48,20 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <div className="relative shrink-0 flex items-center justify-center">
             <img
-              src="/logo_talleres.png"
-              alt="Logo E. GARCÍA - TALLERES"
-              className="h-16 sm:h-20 max-h-20 w-auto aspect-square object-contain rounded-2xl shadow-xl border border-slate-700/60 bg-slate-950 p-1 transition-transform group-hover:scale-105"
+              src="/logo_myg.png"
+              alt="Logo Sistema de Control de Vehículos MYG"
+              className="h-14 sm:h-16 max-h-16 w-auto max-w-[160px] sm:max-w-[200px] object-contain rounded-xl shadow-lg border border-slate-700/60 bg-white p-1 transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
               loading="eager"
             />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-black text-base sm:text-xl tracking-tight text-white leading-none">
-                E. GARCÍA <span className="text-blue-400 text-xs sm:text-sm font-bold">TALLERES</span>
+              <h1 className="font-black text-sm sm:text-base lg:text-lg tracking-tight text-white leading-tight">
+                Sistema de Control de Vehículos <span className="text-blue-400 font-extrabold">MYG</span>
               </h1>
             </div>
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-1">
               <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Tiempo Real (Firebase)</span>
@@ -157,13 +157,46 @@ export const Header: React.FC<HeaderProps> = ({
 
           {currentUser && (
             <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
-              <div className="hidden sm:block text-right">
-                <span className="block text-xs font-bold text-white">
-                  {currentUser.nombre || 'E. GARCÍA'}
-                </span>
-                <span className="block text-[10px] text-blue-300 capitalize font-medium">
-                  {currentUser.rol} • TALLERES E. GARCÍA
-                </span>
+              <div className="flex items-center gap-1.5 text-right">
+                <div className="hidden sm:block">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="block text-xs font-bold text-white">
+                      {(currentUser.nombre || 'Usuario')
+                        .replace(/\s*-\s*TALLERES E\. GARCÍA/gi, '')
+                        .replace(/\s*-\s*Sistema M[Y]?G/gi, '')
+                        .replace(/^Administrador(\s+General)?$/i, 'Usuario MYG')}
+                    </span>
+                    {/* En lugar del texto 'Administrador', muestra este mismo logo en tamaño pequeño al lado del nombre */}
+                    <img
+                      src="/logo_myg.png"
+                      alt="Logo MYG"
+                      className="h-5 sm:h-6 w-auto max-w-[32px] object-contain rounded-md border border-slate-300 bg-white p-0.5 shadow-sm inline-block shrink-0"
+                      referrerPolicy="no-referrer"
+                      title="Sistema de Control de Vehículos MYG"
+                    />
+                  </div>
+                  <span className="block text-[10px] text-blue-300 font-medium">
+                    {currentUser.rol === 'admin'
+                      ? 'Sistema de Control de Vehículos MYG'
+                      : `${currentUser.rol === 'tecnico' ? 'Técnico' : 'Piloto'} • MYG`}
+                  </span>
+                </div>
+
+                {/* Vista móvil compacta: nombre y logo pequeño */}
+                <div className="sm:hidden flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-white max-w-[80px] truncate">
+                    {(currentUser.nombre || 'MYG')
+                      .replace(/\s*-\s*TALLERES E\. GARCÍA/gi, '')
+                      .replace(/\s*-\s*Sistema M[Y]?G/gi, '')
+                      .replace(/^Administrador(\s+General)?$/i, 'MYG')}
+                  </span>
+                  <img
+                    src="/logo_myg.png"
+                    alt="Logo MYG"
+                    className="h-5 w-auto max-w-[28px] object-contain rounded-md border border-slate-300 bg-white p-0.5 shadow-xs shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
               </div>
 
               <button
