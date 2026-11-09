@@ -243,6 +243,7 @@ export default function App() {
             vehiculos={vehiculos}
             servicios={servicios}
             combustibles={combustibles}
+            currentUser={currentUser}
             onCrearServicioParaPlaca={(placa) => {
               setActiveTab('control_mantenimientos');
             }}
@@ -255,6 +256,7 @@ export default function App() {
             vehiculos={vehiculos}
             servicios={servicios}
             repuestosCatalogo={repuestos}
+            currentUser={currentUser}
             onSeleccionarPlaca={(placa) => {
               // Si se requiere ver la ficha del vehiculo
               setActiveTab('vehiculos');
@@ -285,6 +287,7 @@ export default function App() {
           <CombustibleView
             combustibles={combustibles}
             vehiculos={vehiculos}
+            currentUser={currentUser}
           />
         )}
 
@@ -292,6 +295,7 @@ export default function App() {
           <RepuestosView
             repuestos={repuestos}
             servicios={servicios}
+            currentUser={currentUser}
           />
         )}
 
@@ -300,6 +304,7 @@ export default function App() {
             hojas={hojasTrabajo}
             vehiculos={vehiculos}
             repuestosCatalogo={repuestos}
+            currentUser={currentUser}
             onVerVehiculo={() => setActiveTab('vehiculos')}
           />
         )}

@@ -20,7 +20,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Usuario } from '../types';
-import { saveUsuario } from '../services/firestoreService';
+import { saveUsuario, USUARIOS_PREDETERMINADOS } from '../services/firestoreService';
 
 interface LoginModalProps {
   usuarios: Usuario[];
@@ -68,16 +68,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     e.preventDefault();
     setLoginError('');
 
-    const email = loginEmail.trim().toLowerCase();
+    const rawInput = loginEmail.trim();
     const password = loginPassword.trim();
 
-    if (!email) {
-      setLoginError('Por favor ingresa tu correo electrónico.');
-      return;
-    }
-
-    if (!emailRegex.test(email)) {
-      setLoginError('Por favor escribe un correo electrónico válido (ej: usuario@empresa.com).');
+    if (!rawInput) {
+      setLoginError('Por favor ingresa tu nombre de usuario o correo electrónico.');
       return;
     }
 
@@ -89,38 +84,65 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
     setLoginLoading(true);
 
     try {
-      // 1. Intentar autenticación con Firebase Authentication
+      // 1. Intentar autenticación con Firebase Authentication si tiene formato de email
       let authSucceeded = false;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        authSucceeded = true;
-      } catch (authErr: any) {
-        console.warn('Firebase Auth signIn info:', authErr.code);
-        if (authErr.code === 'auth/too-many-requests') {
-          setLoginError('Demasiados intentos fallidos. Por favor intenta más tarde.');
-          setLoginLoading(false);
-          return;
+      const isEmailFormat = emailRegex.test(rawInput);
+      if (isEmailFormat) {
+        try {
+          await signInWithEmailAndPassword(auth, rawInput.toLowerCase(), password);
+          authSucceeded = true;
+        } catch (authErr: any) {
+          console.warn('Firebase Auth signIn info:', authErr.code);
+          if (authErr.code === 'auth/too-many-requests') {
+            setLoginError('Demasiados intentos fallidos. Por favor intenta más tarde.');
+            setLoginLoading(false);
+            return;
+          }
         }
       }
 
-      // 2. Identificar el usuario y su rol automáticamente en la base de datos Firestore
-      const foundUser = usuarios.find((u) => {
+      // 2. Combinar usuarios de Firestore con los predeterminados en código
+      const todosLosUsuarios = [
+        ...usuarios,
+        ...USUARIOS_PREDETERMINADOS.filter(
+          (cu) => !usuarios.some((u) => u.numeroUsuario.toUpperCase() === cu.numeroUsuario.toUpperCase())
+        ),
+      ];
+
+      // Función auxiliar para normalizar acentos y mayúsculas (ej: 'técnico' === 'tecnico')
+      const normalizeText = (t: string) =>
+        t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+      const cleanInput = rawInput.toLowerCase();
+      const normInput = normalizeText(cleanInput);
+
+      const foundUser = todosLosUsuarios.find((u) => {
         const uEmail = (u.email || '').toLowerCase().trim();
-        const matchesEmail = uEmail === email;
+        const uNumero = (u.numeroUsuario || '').toLowerCase().trim();
+        const uNombre = (u.nombre || '').toLowerCase().trim();
+
+        const matchesIdentifier =
+          uEmail === cleanInput ||
+          uNumero === cleanInput ||
+          uNombre === cleanInput ||
+          normInput === normalizeText(uNumero) ||
+          normInput === normalizeText(uNombre) ||
+          normInput === normalizeText(uEmail.split('@')[0]);
+
         const matchesPass = u.password === password;
-        return matchesEmail && (matchesPass || authSucceeded);
+        return matchesIdentifier && (matchesPass || authSucceeded);
       });
 
       if (foundUser) {
-        // Usuario identificado con su rol asignado automáticamente
+        // Usuario identificado exitosamente con su rol asignado
         onLogin(foundUser);
-      } else if (authSucceeded) {
+      } else if (authSucceeded && isEmailFormat) {
         // Usuario autenticado en Firebase Auth pero sin perfil previo en Firestore
         const genericUser: Usuario = {
-          id: email.split('@')[0].toUpperCase(),
-          numeroUsuario: email.split('@')[0].toUpperCase(),
-          nombre: email.split('@')[0],
-          email: email,
+          id: cleanInput.split('@')[0].toUpperCase(),
+          numeroUsuario: cleanInput.split('@')[0].toUpperCase(),
+          nombre: cleanInput.split('@')[0],
+          email: cleanInput,
           password: password,
           rol: 'tecnico',
           creadoEn: new Date().toISOString(),
@@ -128,12 +150,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         await saveUsuario(genericUser);
         onLogin(genericUser);
       } else {
-        // Buscar si el correo existe con otra contraseña
-        const userExists = usuarios.find((u) => (u.email || '').toLowerCase().trim() === email);
+        // Buscar si el identificador existe con otra contraseña
+        const userExists = todosLosUsuarios.find((u) => {
+          const uEmail = (u.email || '').toLowerCase().trim();
+          const uNumero = (u.numeroUsuario || '').toLowerCase().trim();
+          const uNombre = (u.nombre || '').toLowerCase().trim();
+          return (
+            uEmail === cleanInput ||
+            uNumero === cleanInput ||
+            uNombre === cleanInput ||
+            normInput === normalizeText(uNumero) ||
+            normInput === normalizeText(uNombre) ||
+            normInput === normalizeText(uEmail.split('@')[0])
+          );
+        });
+
         if (userExists) {
-          setLoginError('Contraseña incorrecta. Verifica tus credenciales o recupera tu contraseña.');
+          setLoginError('Contraseña incorrecta. Recuerda que distingue mayúsculas (ej: MIG2026).');
         } else {
-          setLoginError('No se encontró ninguna cuenta registrada con este correo electrónico.');
+          setLoginError('No se encontró ningún usuario con ese nombre o correo electrónico.');
         }
       }
     } catch (err: any) {
@@ -319,22 +354,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({ usuarios, onLogin, isOpe
         {/* ----------------------------------------------------------- */}
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="p-6 space-y-4 animate-in fade-in duration-150">
-            {/* Campo: Correo Electrónico */}
+            {/* Campo: Nombre de Usuario o Correo Electrónico */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                <span>📧 Correo Electrónico</span>
+                <span>👤 Nombre de Usuario o Correo</span>
               </label>
               <div className="relative">
-                <Mail className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   id="input-login-email"
-                  type="email"
+                  type="text"
                   value={loginEmail}
                   onChange={(e) => {
                     setLoginEmail(e.target.value);
                     if (loginError) setLoginError('');
                   }}
-                  placeholder="usuario@talleresegarcia.com"
+                  placeholder="Ej: administrador o técnico"
                   className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   required

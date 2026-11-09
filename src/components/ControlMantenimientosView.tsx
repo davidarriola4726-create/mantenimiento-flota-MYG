@@ -20,14 +20,16 @@ import {
   X,
   Gauge,
 } from 'lucide-react';
-import { Vehiculo, Servicio, RepuestoItem, RepuestoCatalogo } from '../types';
+import { Vehiculo, Servicio, RepuestoItem, RepuestoCatalogo, Usuario } from '../types';
 import { saveServicio, deleteServicio } from '../services/firestoreService';
 import { formatQuetzales } from '../utils/alertUtils';
+import { ejecutarImpresionMobile } from '../utils/printUtils';
 
 interface ControlMantenimientosViewProps {
   vehiculos: Vehiculo[];
   servicios: Servicio[];
   repuestosCatalogo: RepuestoCatalogo[];
+  currentUser?: Usuario | null;
   onSeleccionarPlaca?: (placa: string) => void;
 }
 
@@ -35,6 +37,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
   vehiculos,
   servicios,
   repuestosCatalogo,
+  currentUser,
   onSeleccionarPlaca,
 }) => {
   // Estado para el formulario de nuevo mantenimiento
@@ -76,18 +79,9 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
   const [eliminando, setEliminando] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState('');
 
-  // Función segura para invocar el diálogo de impresión del navegador
+  // Función segura para invocar el diálogo de impresión compatible con móviles
   const ejecutarImpresion = () => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.focus();
-        setTimeout(() => {
-          window.print();
-        }, 50);
-      }
-    } catch (error) {
-      console.error('Error al invocar window.print():', error);
-    }
+    ejecutarImpresionMobile();
   };
 
   const handleAbrirEImprimir = (servicio: Servicio, autoPrint = false) => {
@@ -339,7 +333,7 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
   }, [servicios]);
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${servicioAImprimir ? 'print:hidden' : ''}`}>
       {/* 1. ENCABEZADO Y ACCIONES PRINCIPALES */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs print:hidden">
         <div className="flex items-center gap-3.5">
@@ -1048,15 +1042,17 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
                               <span>Imprimir</span>
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={() => solicitarEliminarServicio(s)}
-                              id={`btn-eliminar-mantenimiento-${s.id}`}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                              title="Eliminar registro de mantenimiento"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {currentUser?.rol === 'admin' && (
+                              <button
+                                type="button"
+                                onClick={() => solicitarEliminarServicio(s)}
+                                id={`btn-eliminar-mantenimiento-${s.id}`}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                title="Eliminar registro de mantenimiento"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1145,45 +1141,55 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
               </div>
 
               {/* Ficha del Vehículo y Chofer */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Número de Placa
-                  </span>
-                  <strong className="text-base font-black font-mono text-slate-900">
-                    {servicioAImprimir.placa}
-                  </strong>
-                </div>
+              {(() => {
+                const vehiculoInfo = vehiculos.find((v) => v.placa === servicioAImprimir.placa);
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                        Número de Placa
+                      </span>
+                      <strong className="text-base font-black font-mono text-slate-900">
+                        {servicioAImprimir.placa}
+                      </strong>
+                      {vehiculoInfo && (
+                        <span className="block text-[11px] text-slate-600 font-semibold mt-0.5">
+                          {vehiculoInfo.marcaModelo} {vehiculoInfo.anio ? `(${vehiculoInfo.anio})` : ''} • {vehiculoInfo.tipo}
+                        </span>
+                      )}
+                    </div>
 
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Chofer / Piloto
-                  </span>
-                  <strong className="text-xs font-bold text-slate-800">
-                    {servicioAImprimir.piloto}
-                  </strong>
-                </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                        Chofer / Piloto
+                      </span>
+                      <strong className="text-xs font-bold text-slate-800">
+                        {servicioAImprimir.piloto}
+                      </strong>
+                    </div>
 
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Tipo de Mantenimiento
-                  </span>
-                  <span className="inline-block font-black text-xs uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
-                    {servicioAImprimir.tipoMantenimiento || servicioAImprimir.tipoServicio}
-                  </span>
-                </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                        Tipo de Mantenimiento
+                      </span>
+                      <span className="inline-block font-black text-xs uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                        {servicioAImprimir.tipoMantenimiento || servicioAImprimir.tipoServicio}
+                      </span>
+                    </div>
 
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Kilometraje al Servicio
-                  </span>
-                  <span className="font-mono font-bold text-slate-800 text-xs">
-                    {servicioAImprimir.kilometraje
-                      ? `${servicioAImprimir.kilometraje.toLocaleString()} km`
-                      : 'N/A'}
-                  </span>
-                </div>
-              </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                        Kilometraje al Servicio
+                      </span>
+                      <span className="font-mono font-bold text-slate-800 text-xs">
+                        {servicioAImprimir.kilometraje
+                          ? `${servicioAImprimir.kilometraje.toLocaleString()} km`
+                          : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Problema Reportado / Motivo */}
               <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-xs">
@@ -1370,8 +1376,8 @@ export const ControlMantenimientosView: React.FC<ControlMantenimientosViewProps>
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
                 <span className="text-lg">⚠️</span>
-                <p className="font-semibold leading-relaxed">
-                  ¿Estás seguro de eliminar este repuesto? Esta acción no se puede deshacer.
+                <p className="font-bold text-sm text-slate-900 leading-snug">
+                  ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
                 </p>
               </div>
 

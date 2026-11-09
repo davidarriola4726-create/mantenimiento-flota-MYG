@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   FileBarChart,
   Printer,
@@ -37,14 +37,35 @@ export const InformesView: React.FC<InformesViewProps> = ({
   const [placaSeleccionada, setPlacaSeleccionada] = useState<string>(vehiculos[0]?.placa || '');
   const [fechaInicio, setFechaInicio] = useState(primerDiaMes);
   const [fechaFin, setFechaFin] = useState(hoyStr);
+  const [modoImpresionActivo, setModoImpresionActivo] = useState(false);
+
+  // Restaurar pantalla a estado normal
+  const restaurarVistaNormal = useCallback(() => {
+    setModoImpresionActivo(false);
+    document.body.classList.remove('informe-modo-impresion');
+  }, []);
+
+  // Limpieza al desmontar componente
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('informe-modo-impresion');
+    };
+  }, []);
 
   // Filtrado de servicios e historial
   const { serviciosFiltrados, combustibleFiltrado, vehiculoActual } = useMemo(() => {
     if (tipoInforme === 'vehiculo') {
-      const v = vehiculos.find((x) => x.placa === placaSeleccionada);
-      const s = servicios.filter((x) => x.placa.toUpperCase() === placaSeleccionada.toUpperCase());
-      const c = combustibles.filter((x) => x.placa.toUpperCase() === placaSeleccionada.toUpperCase());
-      return { serviciosFiltrados: s, combustibleFiltrado: c, vehiculoActual: v };
+      const v =
+        vehiculos.find(
+          (x) => x.placa.trim().toUpperCase() === placaSeleccionada.trim().toUpperCase()
+        ) || vehiculos.find((x) => x.placa === placaSeleccionada);
+      const s = servicios.filter(
+        (x) => x.placa.trim().toUpperCase() === placaSeleccionada.trim().toUpperCase()
+      );
+      const c = combustibles.filter(
+        (x) => x.placa.trim().toUpperCase() === placaSeleccionada.trim().toUpperCase()
+      );
+      return { serviciosFiltrados: s, combustibleFiltrado: c, vehiculoActual: v || null };
     } else {
       const s = servicios.filter((x) => x.fecha >= fechaInicio && x.fecha <= fechaFin);
       const c = combustibles.filter((x) => x.fecha >= fechaInicio && x.fecha <= fechaFin);
@@ -78,17 +99,63 @@ export const InformesView: React.FC<InformesViewProps> = ({
     };
   }, [serviciosFiltrados, combustibleFiltrado]);
 
+  // Flujo de impresión oficial: oculta menús y botones, muestra informe limpio, abre ventana nativa de impresión y restaura automáticamente
   const handleImprimir = () => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.focus();
-        setTimeout(() => {
-          window.print();
-        }, 50);
-      }
-    } catch (error) {
-      console.error('Error al invocar window.print():', error);
+    // 1. Ocultar inmediatamente en pantalla: botones de selección, menús superiores, botones de exportar e imprimir
+    document.body.classList.add('informe-modo-impresion');
+    setModoImpresionActivo(true);
+
+    let restaurado = false;
+    const restaurarTodo = () => {
+      if (restaurado) return;
+      restaurado = true;
+      document.body.classList.remove('informe-modo-impresion');
+      setModoImpresionActivo(false);
+      window.removeEventListener('afterprint', restaurarTodo);
+    };
+
+    // 2. Escuchar evento afterprint (nativo en computadoras y móviles modernos) al imprimir o cancelar
+    window.addEventListener('afterprint', restaurarTodo, { once: true });
+
+    // En navegadores que soportan matchMedia print
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQueryList = window.matchMedia('print');
+      const mediaListener = (mql: MediaQueryListEvent) => {
+        if (!mql.matches) {
+          restaurarTodo();
+          mediaQueryList.removeEventListener('change', mediaListener);
+        }
+      };
+      mediaQueryList.addEventListener('change', mediaListener);
     }
+
+    // En celulares (iOS Safari y Android Chrome), el evento focus se activa cuando se cierra la hoja nativa
+    const onFocus = () => {
+      setTimeout(restaurarTodo, 200);
+      window.removeEventListener('focus', onFocus);
+    };
+    window.addEventListener('focus', onFocus, { once: true });
+
+    // 3. Abrir AUTOMÁTICAMENTE el cuadro de impresión inmediatamente con el informe limpio en pantalla
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const t0 = Date.now();
+        try {
+          window.focus();
+          window.print();
+        } catch (error) {
+          console.error('Error al invocar window.print():', error);
+          restaurarTodo();
+        }
+
+        const elapsed = Date.now() - t0;
+        // En computadoras de escritorio donde window.print() es síncrono/bloqueante,
+        // al cerrarse la ventana de diálogo (imprimir o cancelar), se restaura de inmediato
+        if (elapsed > 100) {
+          restaurarTodo();
+        }
+      }, 30);
+    });
   };
 
   const handleExportarCSV = () => {
@@ -145,121 +212,123 @@ export const InformesView: React.FC<InformesViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Panel Superior de Filtro (Oculto en Impresión) */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 print:hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-              <FileBarChart className="w-6 h-6" />
+      {/* Panel Superior de Filtro y Controles (Se oculta temporalmente de forma automática al hacer clic en Imprimir Informe) */}
+      {!modoImpresionActivo && (
+        <div id="panel-filtros-informes" className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                <FileBarChart className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Generador de Informes e Impresión</h2>
+                <p className="text-xs text-slate-500">
+                  Informes oficiales por Vehículo (Placa) o por Rango de Fechas en formato limpio
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-black text-slate-900">Generador de Informes e Impresión</h2>
-              <p className="text-xs text-slate-500">
-                Informes oficiales por Vehículo (Placa) o por Rango de Fechas en formato limpio
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportarCSV}
-              id="btn-exportar-csv"
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center gap-2"
-            >
-              <Download className="w-4 h-4 text-emerald-600" />
-              <span>Exportar Excel / CSV</span>
-            </button>
-            <button
-              onClick={handleImprimir}
-              id="btn-imprimir-informe"
-              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-xs"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Imprimir Informe</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Selector de Tipo de Informe */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <button
-            onClick={() => setTipoInforme('vehiculo')}
-            className={`p-3 rounded-xl border text-left text-xs font-bold transition flex items-center justify-between ${
-              tipoInforme === 'vehiculo'
-                ? 'bg-blue-50 border-blue-500 text-blue-900'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-blue-600" />
-              <span>Opción 1: Informe por VEHÍCULO (Placa)</span>
-            </div>
-            {tipoInforme === 'vehiculo' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-          </button>
-
-          <button
-            onClick={() => setTipoInforme('fechas')}
-            className={`p-3 rounded-xl border text-left text-xs font-bold transition flex items-center justify-between ${
-              tipoInforme === 'fechas'
-                ? 'bg-blue-50 border-blue-500 text-blue-900'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-600" />
-              <span>Opción 2: Informe por RANGO DE FECHAS</span>
-            </div>
-            {tipoInforme === 'fechas' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-          </button>
-        </div>
-
-        {/* Filtros específicos según tipo */}
-        <div className="pt-2">
-          {tipoInforme === 'vehiculo' ? (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                Seleccione la Placa del Vehículo:
-              </label>
-              <select
-                value={placaSeleccionada}
-                onChange={(e) => setPlacaSeleccionada(e.target.value)}
-                className="w-full sm:w-80 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              <button
+                onClick={handleExportarCSV}
+                id="btn-exportar-csv"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer"
               >
-                {vehiculos.map((v) => (
-                  <option key={v.placa} value={v.placa}>
-                    {v.placa} — {v.piloto} ({v.tipo})
-                  </option>
-                ))}
-              </select>
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>Exportar Excel / CSV</span>
+              </button>
+              <button
+                onClick={handleImprimir}
+                id="btn-imprimir-informe"
+                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Imprimir Informe</span>
+              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+          </div>
+
+          {/* Selector de Tipo de Informe */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+            <button
+              onClick={() => setTipoInforme('vehiculo')}
+              className={`p-3 rounded-xl border text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                tipoInforme === 'vehiculo'
+                  ? 'bg-blue-50 border-blue-500 text-blue-900'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-blue-600" />
+                <span>Opción 1: Informe por VEHÍCULO (Placa)</span>
+              </div>
+              {tipoInforme === 'vehiculo' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+            </button>
+
+            <button
+              onClick={() => setTipoInforme('fechas')}
+              className={`p-3 rounded-xl border text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                tipoInforme === 'fechas'
+                  ? 'bg-blue-50 border-blue-500 text-blue-900'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                <span>Opción 2: Informe por RANGO DE FECHAS</span>
+              </div>
+              {tipoInforme === 'fechas' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+            </button>
+          </div>
+
+          {/* Filtros específicos según tipo */}
+          <div className="pt-2">
+            {tipoInforme === 'vehiculo' ? (
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Fecha Inicial
+                  Seleccione la Placa del Vehículo:
                 </label>
-                <input
-                  type="date"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-semibold focus:outline-none"
-                />
+                <select
+                  value={placaSeleccionada}
+                  onChange={(e) => setPlacaSeleccionada(e.target.value)}
+                  className="w-full sm:w-80 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  {vehiculos.map((v) => (
+                    <option key={v.placa} value={v.placa}>
+                      {v.placa} — {v.piloto} ({v.tipo})
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Fecha Final
-                </label>
-                <input
-                  type="date"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-semibold focus:outline-none"
-                />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Fecha Inicial
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Fecha Final
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-semibold focus:outline-none"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* DOCUMENTO FORMATEADO Y LISTO PARA IMPRIMIR (@media print) */}
       <div
@@ -277,7 +346,7 @@ export const InformesView: React.FC<InformesViewProps> = ({
             />
             <div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950 uppercase">
-                Sistema de Control de Vehículos MYG
+                SISTEMA DE CONTROL DE VEHÍCULOS MYG
               </h1>
               <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 Informe Oficial de Mantenimiento, Repuestos y Combustible
@@ -300,25 +369,42 @@ export const InformesView: React.FC<InformesViewProps> = ({
           </div>
         </div>
 
-        {/* Ficha rápida del vehículo si el informe es por placa */}
-        {tipoInforme === 'vehiculo' && vehiculoActual && (
-          <div className="grid grid-cols-4 gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+        {/* Ficha rápida del vehículo con datos completos y placa */}
+        {tipoInforme === 'vehiculo' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
             <div>
-              <span className="text-slate-500 block">Número de Placa:</span>
-              <strong className="text-sm font-mono text-slate-900">{vehiculoActual.placa}</strong>
+              <span className="text-slate-500 font-bold uppercase text-[10px] block">Número de Placa:</span>
+              <strong className="text-base font-mono font-black text-slate-900">
+                {vehiculoActual?.placa || placaSeleccionada}
+              </strong>
             </div>
             <div>
-              <span className="text-slate-500 block">Piloto Asignado:</span>
-              <strong className="text-slate-900">{vehiculoActual.piloto}</strong>
+              <span className="text-slate-500 font-bold uppercase text-[10px] block">Piloto Asignado:</span>
+              <strong className="text-slate-900 font-bold">
+                {vehiculoActual?.piloto || 'Asignado a Ruta'}
+              </strong>
             </div>
             <div>
-              <span className="text-slate-500 block">Tipo / Modelo:</span>
-              <strong className="text-slate-900">{vehiculoActual.tipo} {vehiculoActual.marcaModelo || ''}</strong>
+              <span className="text-slate-500 font-bold uppercase text-[10px] block">Tipo / Modelo:</span>
+              <strong className="text-slate-900 font-bold">
+                {vehiculoActual ? `${vehiculoActual.tipo} ${vehiculoActual.marcaModelo || ''} ${vehiculoActual.anio ? `(${vehiculoActual.anio})` : ''}` : 'Vehículo Flota'}
+              </strong>
             </div>
             <div>
-              <span className="text-slate-500 block">Kilometraje Odómetro:</span>
-              <strong className="text-sm font-mono text-slate-900">{vehiculoActual.kilometraje.toLocaleString()} km</strong>
+              <span className="text-slate-500 font-bold uppercase text-[10px] block">Kilometraje Odómetro:</span>
+              <strong className="text-sm font-mono font-bold text-slate-900">
+                {vehiculoActual?.kilometraje ? `${vehiculoActual.kilometraje.toLocaleString()} km` : 'N/A'}
+              </strong>
             </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex items-center justify-between">
+            <span className="font-bold text-slate-700">
+              Período de Análisis: <span className="font-mono">{fechaInicio}</span> al <span className="font-mono">{fechaFin}</span>
+            </span>
+            <span className="text-slate-500 font-semibold">
+              Total de Vehículos Activos en Flota: {vehiculos.length}
+            </span>
           </div>
         )}
 

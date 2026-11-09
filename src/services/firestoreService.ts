@@ -288,11 +288,86 @@ export async function cambiarPasswordUsuario(numeroUsuario: string, nuevaPasswor
   await setDoc(docRef, { password: nuevaPassword }, { merge: true });
 }
 
+export async function deleteUsuario(idOrNumero: string): Promise<void> {
+  const cleanId = idOrNumero.trim().toUpperCase();
+  const docRef = doc(db, COLLECTIONS.USUARIOS, cleanId);
+  await deleteDoc(docRef);
+}
+
 // ============================================
 // 7. INICIALIZACIÓN AUTOMÁTICA DE DATOS (SEED)
 // ============================================
+
+// Lista de usuarios en código siguiendo el formato oficial
+export const USUARIOS_PREDETERMINADOS: Usuario[] = [
+  {
+    id: 'ADMINISTRADOR',
+    numeroUsuario: 'ADMINISTRADOR',
+    nombre: 'administrador',
+    email: 'administrador@myg.gt',
+    password: 'MIG2026',
+    rol: 'admin',
+    creadoEn: new Date().toISOString(),
+  },
+  {
+    id: 'TECNICO',
+    numeroUsuario: 'TECNICO',
+    nombre: 'técnico',
+    email: 'tecnico@myg.gt',
+    password: 'MIG2026',
+    rol: 'tecnico',
+    creadoEn: new Date().toISOString(),
+  },
+  {
+    id: 'ADMIN01',
+    numeroUsuario: 'ADMIN01',
+    nombre: 'Administrador General - Sistema MYG',
+    email: 'admin@myg.gt',
+    password: 'admin',
+    rol: 'admin',
+    creadoEn: new Date().toISOString(),
+  },
+  {
+    id: 'TEC01',
+    numeroUsuario: 'TEC01',
+    nombre: 'Carlos Ramos - Jefe de Taller',
+    email: 'tec01@myg.gt',
+    password: '123',
+    rol: 'tecnico',
+    creadoEn: new Date().toISOString(),
+  },
+  {
+    id: 'PILOTO01',
+    numeroUsuario: 'PILOTO01',
+    nombre: 'Juan Pérez - Piloto Flota',
+    email: 'piloto01@myg.gt',
+    password: '123',
+    rol: 'piloto',
+    creadoEn: new Date().toISOString(),
+  },
+];
+
+// Asegurar que los dos usuarios nuevos requeridos se inserten en Firestore si aún no existen
+export async function asegurarUsuariosNuevos(): Promise<void> {
+  try {
+    const usuariosNuevos = USUARIOS_PREDETERMINADOS.slice(0, 2);
+    for (const u of usuariosNuevos) {
+      const uRef = doc(db, COLLECTIONS.USUARIOS, u.numeroUsuario);
+      const snap = await getDoc(uRef);
+      if (!snap.exists()) {
+        await setDoc(uRef, u);
+      }
+    }
+  } catch (err) {
+    console.warn('Nota al sincronizar usuarios base en Firestore:', err);
+  }
+}
+
 export async function inicializarDatosPredeterminados(): Promise<void> {
   try {
+    // Sincronizar usuarios requeridos inmediatamente en Firestore
+    await asegurarUsuariosNuevos();
+
     // Verificar si el sistema ya fue inicializado previamente para evitar reinsertar registros borrados
     const configRef = doc(db, '_config', 'seed_completed');
     const configSnap = await getDoc(configRef);
@@ -303,35 +378,7 @@ export async function inicializarDatosPredeterminados(): Promise<void> {
     // 1. Usuarios iniciales si no existen
     const usersSnap = await getDocs(collection(db, COLLECTIONS.USUARIOS));
     if (usersSnap.empty) {
-      const usuariosIniciales: Usuario[] = [
-        {
-          id: 'ADMIN01',
-          numeroUsuario: 'ADMIN01',
-          nombre: 'Administrador General - Sistema MYG',
-          email: 'admin@myg.gt',
-          password: 'admin',
-          rol: 'admin',
-          creadoEn: new Date().toISOString(),
-        },
-        {
-          id: 'TEC01',
-          numeroUsuario: 'TEC01',
-          nombre: 'Carlos Ramos - Jefe de Taller',
-          email: 'tec01@myg.gt',
-          password: '123',
-          rol: 'tecnico',
-          creadoEn: new Date().toISOString(),
-        },
-        {
-          id: 'PILOTO01',
-          numeroUsuario: 'PILOTO01',
-          nombre: 'Juan Pérez - Piloto Flota',
-          email: 'piloto01@myg.gt',
-          password: '123',
-          rol: 'piloto',
-          creadoEn: new Date().toISOString(),
-        },
-      ];
+      const usuariosIniciales: Usuario[] = USUARIOS_PREDETERMINADOS;
       for (const u of usuariosIniciales) {
         await setDoc(doc(db, COLLECTIONS.USUARIOS, u.numeroUsuario), u);
       }

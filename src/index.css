@@ -2,11 +2,12 @@
 
 /* =========================================================
    ESTILOS DE IMPRESIÓN OFICIALES (@media print)
-   Garantiza que al imprimir SOLO se vean los datos del registro
-   sin menús, botones, encabezados ni fondos oscuros.
+   Garantiza que al imprimir SOLO se vea el contenido del documento,
+   sin botones, menús, barras laterales ni elementos de la interfaz.
+   Compatible tanto con computadoras como con teléfonos y tablets.
    ========================================================= */
 @media print {
-  /* Ocultar elementos no imprimibles */
+  /* 1. Ocultar de forma estricta todos los elementos de interfaz y botones */
   header,
   nav,
   aside,
@@ -19,7 +20,7 @@
     visibility: hidden !important;
   }
 
-  /* Resetear página principal y contenedor */
+  /* 2. Resetear lienzo principal para impresión limpia */
   html,
   body,
   #root,
@@ -38,7 +39,7 @@
     print-color-adjust: exact !important;
   }
 
-  /* Resetear modales para que se comporten como páginas planas */
+  /* 3. Transformar modales flotantes en documentos planos estándar */
   .fixed,
   .fixed.inset-0 {
     position: static !important;
@@ -50,10 +51,20 @@
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
+    max-height: none !important;
     box-shadow: none !important;
+    border: none !important;
   }
 
-  /* Formato imprimible a tamaño completo */
+  .overflow-y-auto,
+  .overflow-hidden,
+  [class*="max-h-"] {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* 4. Formato de documento imprimible (solo datos del registro) */
   #formato-impresion-mantenimiento,
   #formato-impresion-informe,
   #formato-impresion-hoja,
@@ -71,17 +82,32 @@
     page-break-inside: avoid;
   }
 
-  /* Configuración de página de impresión */
+  /* 5. Configuración de página estándar carta */
   @page {
     size: letter portrait;
-    margin: 12mm 15mm;
+    margin: 8mm 12mm;
   }
 
-  /* Evitar saltos de página dentro de tablas o tarjetas */
+  /* 6. Evitar cortes indeseados en tablas y firmas */
   table,
   tr,
   td,
-  th {
+  th,
+  .signature-block {
     page-break-inside: avoid;
   }
+}
+
+/* =========================================================
+   MODO LIMPIO TEMPORAL AL IMPRIMIR INFORME
+   Oculta menús, encabezados y barras superiores en pantalla
+   mientras se visualiza y envía a imprimir el informe oficial
+   ========================================================= */
+body.informe-modo-impresion header,
+body.informe-modo-impresion nav,
+body.informe-modo-impresion aside,
+body.informe-modo-impresion footer,
+body.informe-modo-impresion #panel-filtros-informes,
+body.informe-modo-impresion .md\:hidden.fixed.bottom-0 {
+  display: none !important;
 }

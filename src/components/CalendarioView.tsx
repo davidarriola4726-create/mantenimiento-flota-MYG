@@ -26,6 +26,7 @@ import {
 import { Vehiculo, Servicio, RepuestoCatalogo, RepuestoItem } from '../types';
 import { calcularAlertaVehiculo, formatQuetzales } from '../utils/alertUtils';
 import { saveServicio } from '../services/firestoreService';
+import { ejecutarImpresionMobile } from '../utils/printUtils';
 
 interface CalendarioViewProps {
   vehiculos: Vehiculo[];
@@ -470,7 +471,7 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className={`space-y-6 animate-in fade-in duration-200 ${modalReporteMesAbierto ? 'print:hidden' : ''}`}>
       {/* -------------------------------------------------------------- */}
       {/* 1. ENCABEZADO Y CONTROLES DE NAVEGACIÓN DE MES/AÑO              */}
       {/* -------------------------------------------------------------- */}
@@ -1376,13 +1377,8 @@ export const CalendarioView: React.FC<CalendarioViewProps> = ({
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    try {
-                      window.print();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  }}
+                  onClick={ejecutarImpresionMobile}
+                  id="btn-imprimir-reporte-calendario"
                   className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />

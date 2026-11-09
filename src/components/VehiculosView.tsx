@@ -21,14 +21,17 @@ import {
   Fuel,
   FileText,
 } from 'lucide-react';
-import { Vehiculo, Servicio, RegistroCombustible, EstadoAlerta } from '../types';
+import { Vehiculo, Servicio, RegistroCombustible, EstadoAlerta, Usuario } from '../types';
 import { saveVehiculo, deleteVehiculo, saveServicio } from '../services/firestoreService';
 import { calcularAlertaVehiculo, formatQuetzales } from '../utils/alertUtils';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { ejecutarImpresionMobile } from '../utils/printUtils';
 
 interface VehiculosViewProps {
   vehiculos: Vehiculo[];
   servicios: Servicio[];
   combustibles: RegistroCombustible[];
+  currentUser?: Usuario | null;
   onCrearServicioParaPlaca?: (placa: string) => void;
   onCrearHojaCampoParaPlaca?: (placa: string) => void;
 }
@@ -37,6 +40,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
   vehiculos,
   servicios,
   combustibles,
+  currentUser,
   onCrearServicioParaPlaca,
   onCrearHojaCampoParaPlaca,
 }) => {
@@ -181,16 +185,23 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
     }
   };
 
-  const handleEliminarVehiculo = async (placa: string) => {
-    if (confirm(`¿Está seguro de eliminar el vehículo placa ${placa} y toda su ficha?`)) {
-      try {
-        await deleteVehiculo(placa);
-        if (vehiculoSeleccionadoFicha?.placa === placa) {
-          setVehiculoSeleccionadoFicha(null);
-        }
-      } catch (err) {
-        console.error('Error eliminando vehículo:', err);
+  // Confirmación de eliminación de vehículo
+  const [vehiculoAEliminar, setVehiculoAEliminar] = useState<string | null>(null);
+  const [eliminandoVehiculo, setEliminandoVehiculo] = useState(false);
+
+  const handleConfirmarEliminarVehiculo = async () => {
+    if (!vehiculoAEliminar) return;
+    setEliminandoVehiculo(true);
+    try {
+      await deleteVehiculo(vehiculoAEliminar);
+      if (vehiculoSeleccionadoFicha?.placa === vehiculoAEliminar) {
+        setVehiculoSeleccionadoFicha(null);
       }
+      setVehiculoAEliminar(null);
+    } catch (err) {
+      console.error('Error eliminando vehículo:', err);
+    } finally {
+      setEliminandoVehiculo(false);
     }
   };
 
@@ -216,7 +227,7 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
   }, [historialServiciosPlaca, historialCombustiblePlaca]);
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${vehiculoSeleccionadoFicha ? 'print:hidden' : ''}`}>
       {/* Encabezado y Botón Nuevo */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs print:hidden">
         <div className="flex items-center gap-3">
@@ -463,14 +474,16 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
                     <span>Ver Ficha / Historial</span>
                   </button>
 
-                  <button
-                    onClick={() => handleEliminarVehiculo(v.placa)}
-                    id={`btn-del-vehiculo-${v.placa}`}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
-                    title="Eliminar Vehículo"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {currentUser?.rol === 'admin' && (
+                    <button
+                      onClick={() => setVehiculoAEliminar(v.placa)}
+                      id={`btn-del-vehiculo-${v.placa}`}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                      title="Eliminar Vehículo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -512,16 +525,8 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
               <div className="flex items-center gap-2 print:hidden">
                 <button
                   type="button"
-                  onClick={() => {
-                    try {
-                      if (typeof window !== 'undefined') {
-                        window.focus();
-                        setTimeout(() => window.print(), 50);
-                      }
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  }}
+                  onClick={ejecutarImpresionMobile}
+                  id="btn-imprimir-ficha-vehiculo"
                   className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20 flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
@@ -961,6 +966,16 @@ export const VehiculosView: React.FC<VehiculosViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmación para Eliminar Vehículo */}
+      <ConfirmDeleteModal
+        isOpen={!!vehiculoAEliminar}
+        title="Eliminar Vehículo"
+        detalle={vehiculoAEliminar ? `Vehículo Placa: ${vehiculoAEliminar}` : undefined}
+        eliminando={eliminandoVehiculo}
+        onCancel={() => setVehiculoAEliminar(null)}
+        onConfirm={handleConfirmarEliminarVehiculo}
+      />
     </div>
   );
 };

@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Wrench, Plus, Search, Trash2, Edit2, Check, X, Tag, DollarSign, PackageCheck, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { RepuestoCatalogo, Servicio } from '../types';
+import { RepuestoCatalogo, Servicio, Usuario } from '../types';
 import { saveRepuesto, deleteRepuesto, getRepuestosDirectly } from '../services/firestoreService';
 import { formatQuetzales } from '../utils/alertUtils';
 
 interface RepuestosViewProps {
   repuestos: RepuestoCatalogo[];
   servicios: Servicio[];
+  currentUser?: Usuario | null;
 }
 
-export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servicios }) => {
+export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servicios, currentUser }) => {
   const [repuestosLocales, setRepuestosLocales] = useState<RepuestoCatalogo[]>(repuestos);
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -342,14 +343,16 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => solicitarEliminar(item)}
-                          id={`btn-del-repuesto-${item.id}`}
-                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                          title="Eliminar repuesto del catálogo"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {currentUser?.rol === 'admin' && (
+                          <button
+                            onClick={() => solicitarEliminar(item)}
+                            id={`btn-del-repuesto-${item.id}`}
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Eliminar repuesto del catálogo"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -506,8 +509,8 @@ export const RepuestosView: React.FC<RepuestosViewProps> = ({ repuestos, servici
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
                 <span className="text-lg">⚠️</span>
-                <p className="font-semibold leading-relaxed">
-                  ¿Estás seguro de eliminar este repuesto? Esta acción no se puede deshacer.
+                <p className="font-bold text-sm text-slate-900 leading-snug">
+                  ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
                 </p>
               </div>
 

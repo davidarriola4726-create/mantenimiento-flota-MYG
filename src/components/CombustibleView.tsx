@@ -13,16 +13,17 @@ import {
   X,
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { RegistroCombustible, Vehiculo } from '../types';
+import { RegistroCombustible, Vehiculo, Usuario } from '../types';
 import { saveCombustible, deleteCombustible, getCombustiblesDirectly } from '../services/firestoreService';
 import { formatQuetzales } from '../utils/alertUtils';
 
 interface CombustibleViewProps {
   combustibles: RegistroCombustible[];
   vehiculos: Vehiculo[];
+  currentUser?: Usuario | null;
 }
 
-export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, vehiculos }) => {
+export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, vehiculos, currentUser }) => {
   const hoy = new Date();
   const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 
@@ -440,14 +441,16 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
                       {formatQuetzales(r.montoQuetzales)}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={() => solicitarEliminar(r)}
-                        id={`btn-del-combustible-${r.id}`}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                        title="Eliminar registro de combustible"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {currentUser?.rol === 'admin' && (
+                        <button
+                          onClick={() => solicitarEliminar(r)}
+                          id={`btn-del-combustible-${r.id}`}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          title="Eliminar registro de combustible"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -648,8 +651,8 @@ export const CombustibleView: React.FC<CombustibleViewProps> = ({ combustibles, 
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
                 <span className="text-lg">⚠️</span>
-                <p className="font-semibold leading-relaxed">
-                  ¿Estás seguro de eliminar este repuesto? Esta acción no se puede deshacer.
+                <p className="font-bold text-sm text-slate-900 leading-snug">
+                  ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
                 </p>
               </div>
 

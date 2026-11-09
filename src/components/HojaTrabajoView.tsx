@@ -13,15 +13,18 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
-import { HojaTrabajo, RepuestoCatalogo, RepuestoItem, Servicio, Vehiculo } from '../types';
+import { HojaTrabajo, RepuestoCatalogo, RepuestoItem, Servicio, Vehiculo, Usuario } from '../types';
 import { saveHojaTrabajo, saveServicio, deleteHojaTrabajo } from '../services/firestoreService';
 import { SignaturePad } from './SignaturePad';
 import { formatQuetzales } from '../utils/alertUtils';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { ejecutarImpresionMobile } from '../utils/printUtils';
 
 interface HojaTrabajoViewProps {
   hojas: HojaTrabajo[];
   vehiculos: Vehiculo[];
   repuestosCatalogo: RepuestoCatalogo[];
+  currentUser?: Usuario | null;
   onVerVehiculo?: (placa: string) => void;
 }
 
@@ -29,9 +32,12 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
   hojas,
   vehiculos,
   repuestosCatalogo,
+  currentUser,
 }) => {
   const [modoCreacion, setModoCreacion] = useState(false);
   const [hojaSeleccionadaImprimir, setHojaSeleccionadaImprimir] = useState<HojaTrabajo | null>(null);
+  const [hojaAEliminar, setHojaAEliminar] = useState<HojaTrabajo | null>(null);
+  const [eliminandoHoja, setEliminandoHoja] = useState(false);
 
   // Campos formulario
   const [placa, setPlaca] = useState('');
@@ -193,16 +199,7 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
   };
 
   const handleImprimir = () => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.focus();
-        setTimeout(() => {
-          window.print();
-        }, 50);
-      }
-    } catch (error) {
-      console.error('Error al invocar window.print():', error);
-    }
+    ejecutarImpresionMobile();
   };
 
   return (
@@ -638,27 +635,37 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
               </div>
             </div>
 
-            {/* Datos generales */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-3 bg-slate-50 rounded-lg text-xs">
-              <div>
-                <span className="text-slate-500 block">Número de Placa:</span>
-                <strong className="text-sm font-mono text-slate-900">{hojaSeleccionadaImprimir.placa}</strong>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Piloto Asignado:</span>
-                <strong className="text-sm text-slate-900">{hojaSeleccionadaImprimir.piloto}</strong>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Técnico Responsable:</span>
-                <strong className="text-sm text-slate-900">{hojaSeleccionadaImprimir.tecnico}</strong>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Kilometraje:</span>
-                <strong className="text-sm font-mono text-slate-900">
-                  {hojaSeleccionadaImprimir.kilometraje.toLocaleString()} km
-                </strong>
-              </div>
-            </div>
+            {/* Datos generales del Vehículo y Personal */}
+            {(() => {
+              const vehiculoInfo = vehiculos.find((v) => v.placa === hojaSeleccionadaImprimir.placa);
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-3 bg-slate-50 rounded-lg text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Número de Placa:</span>
+                    <strong className="text-sm font-mono text-slate-900">{hojaSeleccionadaImprimir.placa}</strong>
+                    {vehiculoInfo && (
+                      <span className="block text-[11px] text-slate-600 font-semibold mt-0.5">
+                        {vehiculoInfo.marcaModelo} {vehiculoInfo.anio ? `(${vehiculoInfo.anio})` : ''} • {vehiculoInfo.tipo}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Piloto Asignado:</span>
+                    <strong className="text-sm text-slate-900">{hojaSeleccionadaImprimir.piloto}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Técnico Responsable:</span>
+                    <strong className="text-sm text-slate-900">{hojaSeleccionadaImprimir.tecnico}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Kilometraje:</span>
+                    <strong className="text-sm font-mono text-slate-900">
+                      {hojaSeleccionadaImprimir.kilometraje.toLocaleString()} km
+                    </strong>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div>
               <span className="text-xs font-bold text-slate-500 uppercase block mb-1">
@@ -822,23 +829,43 @@ export const HojaTrabajoView: React.FC<HojaTrabajoViewProps> = ({
                     <span>Ver / Imprimir</span>
                   </button>
 
-                  <button
-                    onClick={async () => {
-                      if (confirm(`¿Eliminar hoja ${h.numeroOrden}?`)) {
-                        await deleteHojaTrabajo(h.id);
-                      }
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"
-                    title="Eliminar"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {currentUser?.rol === 'admin' && (
+                    <button
+                      onClick={() => setHojaAEliminar(h)}
+                      id={`btn-del-hoja-${h.id}`}
+                      className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg cursor-pointer"
+                      title="Eliminar hoja de trabajo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* Modal de Confirmación para Eliminar Hoja de Trabajo */}
+      <ConfirmDeleteModal
+        isOpen={!!hojaAEliminar}
+        title="Eliminar Hoja de Trabajo"
+        detalle={hojaAEliminar ? `Orden: ${hojaAEliminar.numeroOrden} • Placa: ${hojaAEliminar.placa}` : undefined}
+        eliminando={eliminandoHoja}
+        onCancel={() => setHojaAEliminar(null)}
+        onConfirm={async () => {
+          if (!hojaAEliminar) return;
+          setEliminandoHoja(true);
+          try {
+            await deleteHojaTrabajo(hojaAEliminar.id);
+            setHojaAEliminar(null);
+          } catch (err) {
+            console.error('Error al eliminar hoja de trabajo:', err);
+          } finally {
+            setEliminandoHoja(false);
+          }
+        }}
+      />
     </div>
   );
 };
