@@ -99,63 +99,26 @@ export const InformesView: React.FC<InformesViewProps> = ({
     };
   }, [serviciosFiltrados, combustibleFiltrado]);
 
-  // Flujo de impresión oficial: oculta menús y botones, muestra informe limpio, abre ventana nativa de impresión y restaura automáticamente
+  // Al hacer clic en el botón principal "IMPRIMIR INFORME":
+  // Oculta todos los botones, menús y controles que NO van en el papel
+  // Deja visible ÚNICAMENTE el informe completo en vista limpia
   const handleImprimir = () => {
-    // 1. Ocultar inmediatamente en pantalla: botones de selección, menús superiores, botones de exportar e imprimir
     document.body.classList.add('informe-modo-impresion');
     setModoImpresionActivo(true);
+  };
 
-    let restaurado = false;
-    const restaurarTodo = () => {
-      if (restaurado) return;
-      restaurado = true;
-      document.body.classList.remove('informe-modo-impresion');
-      setModoImpresionActivo(false);
-      window.removeEventListener('afterprint', restaurarTodo);
-    };
-
-    // 2. Escuchar evento afterprint (nativo en computadoras y móviles modernos) al imprimir o cancelar
-    window.addEventListener('afterprint', restaurarTodo, { once: true });
-
-    // En navegadores que soportan matchMedia print
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      const mediaQueryList = window.matchMedia('print');
-      const mediaListener = (mql: MediaQueryListEvent) => {
-        if (!mql.matches) {
-          restaurarTodo();
-          mediaQueryList.removeEventListener('change', mediaListener);
-        }
-      };
-      mediaQueryList.addEventListener('change', mediaListener);
+  // Acción del botón azul "IMPRIMIR" en la vista limpia:
+  // Ejecuta directamente window.print() para abrir el cuadro de impresión del navegador
+  const handleEjecutarPrintNativo = () => {
+    try {
+      window.focus();
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.focus?.();
+      }
+      window.print();
+    } catch (err) {
+      console.error('Error al invocar window.print():', err);
     }
-
-    // En celulares (iOS Safari y Android Chrome), el evento focus se activa cuando se cierra la hoja nativa
-    const onFocus = () => {
-      setTimeout(restaurarTodo, 200);
-      window.removeEventListener('focus', onFocus);
-    };
-    window.addEventListener('focus', onFocus, { once: true });
-
-    // 3. Abrir AUTOMÁTICAMENTE el cuadro de impresión inmediatamente con el informe limpio en pantalla
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const t0 = Date.now();
-        try {
-          window.focus();
-          window.print();
-        } catch (error) {
-          console.error('Error al invocar window.print():', error);
-          restaurarTodo();
-        }
-
-        const elapsed = Date.now() - t0;
-        // En computadoras de escritorio donde window.print() es síncrono/bloqueante,
-        // al cerrarse la ventana de diálogo (imprimir o cancelar), se restaura de inmediato
-        if (elapsed > 100) {
-          restaurarTodo();
-        }
-      }, 30);
-    });
   };
 
   const handleExportarCSV = () => {
@@ -238,12 +201,14 @@ export const InformesView: React.FC<InformesViewProps> = ({
                 <span>Exportar Excel / CSV</span>
               </button>
               <button
+                type="button"
                 onClick={handleImprimir}
                 id="btn-imprimir-informe"
-                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-black tracking-wide rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer uppercase"
+                title="Imprimir Informe Oficial MYG"
               >
                 <Printer className="w-4 h-4" />
-                <span>Imprimir Informe</span>
+                <span>IMPRIMIR INFORME</span>
               </button>
             </div>
           </div>
@@ -326,6 +291,42 @@ export const InformesView: React.FC<InformesViewProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Barra de control de la vista limpia: Botón azul IMPRIMIR y botón Volver a la vista normal */}
+      {modoImpresionActivo && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm print:hidden animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs sm:text-sm font-bold text-slate-800">
+              Vista limpia del informe oficial (MYG)
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            {/* Botón azul IMPRIMIR */}
+            <button
+              type="button"
+              onClick={handleEjecutarPrintNativo}
+              id="btn-imprimir-vista-limpia"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center gap-2 cursor-pointer shadow-md uppercase tracking-wider"
+              title="Abrir ventana de impresión del navegador"
+            >
+              <Printer className="w-4 h-4" />
+              <span>IMPRIMIR</span>
+            </button>
+
+            {/* Botón para volver a la vista normal */}
+            <button
+              type="button"
+              onClick={restaurarVistaNormal}
+              id="btn-volver-vista-normal"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
+              title="Regresar a la vista con filtros y botones"
+            >
+              <span>← Volver a la vista normal</span>
+            </button>
           </div>
         </div>
       )}
