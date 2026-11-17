@@ -38,10 +38,14 @@ export const InformesView: React.FC<InformesViewProps> = ({
   const [fechaInicio, setFechaInicio] = useState(primerDiaMes);
   const [fechaFin, setFechaFin] = useState(hoyStr);
   const [modoImpresionActivo, setModoImpresionActivo] = useState(false);
+  const [mostrarBotonManual, setMostrarBotonManual] = useState(false);
+  const [bloqueoIframeAviso, setBloqueoIframeAviso] = useState(false);
 
   // Restaurar pantalla a estado normal
   const restaurarVistaNormal = useCallback(() => {
     setModoImpresionActivo(false);
+    setMostrarBotonManual(false);
+    setBloqueoIframeAviso(false);
     document.body.classList.remove('informe-modo-impresion');
   }, []);
 
@@ -99,27 +103,96 @@ export const InformesView: React.FC<InformesViewProps> = ({
     };
   }, [serviciosFiltrados, combustibleFiltrado]);
 
-  // Al hacer clic en el botón principal "IMPRIMIR INFORME":
-  // Oculta todos los botones, menús y controles que NO van en el papel
-  // Deja visible ÚNICAMENTE el informe completo en vista limpia
+  // Efecto: una vez mostrada la vista limpia sin botones ni menús, intenta abrir automáticamente window.print()
+  // y si por alguna razón no se abre automáticamente, muestra el botón visible "IMPRIMIR AHORA"
+  useEffect(() => {
+    if (!modoImpresionActivo) return;
+
+    let cancelado = false;
+    let printAbierto = false;
+    let restaurado = false;
+    let printTimer: ReturnType<typeof setTimeout> | null = null;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const restaurarSeguro = () => {
+      if (cancelado || restaurado) return;
+      restaurado = true;
+      restaurarVistaNormal();
+    };
+
+    const handleBeforePrint = () => {
+      printAbierto = true;
+    };
+
+    const handleAfterPrint = () => {
+      restaurarSeguro();
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    const rafId = requestAnimationFrame(() => {
+      printTimer = setTimeout(() => {
+        if (cancelado) return;
+        const t0 = Date.now();
+        try {
+          window.print();
+        } catch (err) {
+          console.error('Error al invocar window.print():', err);
+        }
+
+        const elapsed = Date.now() - t0;
+        if (elapsed > 150) {
+          restaurarSeguro();
+          return;
+        }
+
+        // Si el navegador no abrió automáticamente el cuadro o sigue en vista limpia, mostrar botón IMPRIMIR AHORA
+        fallbackTimer = setTimeout(() => {
+          if (!cancelado && !restaurado) {
+            setMostrarBotonManual(true);
+          }
+        }, printAbierto ? 800 : 350);
+      }, 80);
+    });
+
+    return () => {
+      cancelado = true;
+      cancelAnimationFrame(rafId);
+      if (printTimer) clearTimeout(printTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [modoImpresionActivo, restaurarVistaNormal]);
+
+  // Al hacer clic en el botón azul "Imprimir Informe":
+  // 1. Muestra primero la vista limpia del informe sin botones ni menús
+  // 2. El useEffect intenta abrir automáticamente el cuadro de impresión del navegador
   const handleImprimir = () => {
+    setMostrarBotonManual(false);
+    setBloqueoIframeAviso(false);
     document.body.classList.add('informe-modo-impresion');
     setModoImpresionActivo(true);
   };
 
-  // Acción del botón azul "IMPRIMIR" en la vista limpia:
-  // Ejecuta directamente window.print() para abrir el cuadro de impresión del navegador
-  const handleEjecutarPrintNativo = () => {
-    try {
-      window.focus();
-      if (typeof document !== 'undefined' && document.body) {
-        document.body.focus?.();
+  // Función directa de impresión para el botón azul "IMPRIMIR AHORA"
+  function imprimir() {
+    let dialogAbierto = false;
+    const onBeforePrint = () => {
+      dialogAbierto = true;
+    };
+    window.addEventListener('beforeprint', onBeforePrint, { once: true });
+
+    window.print();
+
+    setTimeout(() => {
+      window.removeEventListener('beforeprint', onBeforePrint);
+      if (!dialogAbierto && document.hasFocus()) {
+        setBloqueoIframeAviso(true);
       }
-      window.print();
-    } catch (err) {
-      console.error('Error al invocar window.print():', err);
-    }
-  };
+    }, 300);
+  }
 
   const handleExportarCSV = () => {
     const rows = [
@@ -204,11 +277,11 @@ export const InformesView: React.FC<InformesViewProps> = ({
                 type="button"
                 onClick={handleImprimir}
                 id="btn-imprimir-informe"
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-black tracking-wide rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer uppercase"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold tracking-wide rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
                 title="Imprimir Informe Oficial MYG"
               >
                 <Printer className="w-4 h-4" />
-                <span>IMPRIMIR INFORME</span>
+                <span>Imprimir Informe</span>
               </button>
             </div>
           </div>
@@ -295,39 +368,47 @@ export const InformesView: React.FC<InformesViewProps> = ({
         </div>
       )}
 
-      {/* Barra de control de la vista limpia: Botón azul IMPRIMIR y botón Volver a la vista normal */}
-      {modoImpresionActivo && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm print:hidden animate-in fade-in duration-150">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs sm:text-sm font-bold text-slate-800">
-              Vista limpia del informe oficial (MYG)
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            {/* Botón azul IMPRIMIR */}
-            <button
-              type="button"
-              onClick={handleEjecutarPrintNativo}
-              id="btn-imprimir-vista-limpia"
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center gap-2 cursor-pointer shadow-md uppercase tracking-wider"
-              title="Abrir ventana de impresión del navegador"
-            >
-              <Printer className="w-4 h-4" />
-              <span>IMPRIMIR</span>
-            </button>
+      {/* Barra de respaldo: solo aparece si el cuadro de impresión no se abrió automáticamente */}
+      {modoImpresionActivo && mostrarBotonManual && (
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-sm print:hidden animate-in fade-in duration-150 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-xs sm:text-sm font-bold text-slate-800">
+                Si la ventana de impresión no se abrió automáticamente, presiona:
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              {/* Botón visible IMPRIMIR AHORA para disparo manual */}
+              <button
+                type="button"
+                onClick={imprimir}
+                id="btn-imprimir-ahora"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center gap-2 cursor-pointer shadow-md uppercase tracking-wider"
+                title="Abrir ventana de impresión del navegador"
+              >
+                <Printer className="w-4 h-4" />
+                <span>IMPRIMIR AHORA</span>
+              </button>
 
-            {/* Botón para volver a la vista normal */}
-            <button
-              type="button"
-              onClick={restaurarVistaNormal}
-              id="btn-volver-vista-normal"
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
-              title="Regresar a la vista con filtros y botones"
-            >
-              <span>← Volver a la vista normal</span>
-            </button>
+              {/* Botón para volver a la vista normal */}
+              <button
+                type="button"
+                onClick={restaurarVistaNormal}
+                id="btn-volver-vista-normal"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                title="Regresar a la vista con filtros y botones"
+              >
+                <span>← Volver a la vista normal</span>
+              </button>
+            </div>
           </div>
+
+          {bloqueoIframeAviso && (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              Si estás viendo la aplicación dentro de una vista previa embebida que bloquea cuadros de impresión, abre la app en una pestaña propia del navegador o usa <strong>Ctrl+P / Cmd+P</strong> (en celular: menú del navegador → Imprimir).
+            </p>
+          )}
         </div>
       )}
 
