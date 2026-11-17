@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Vehiculo, Servicio, RegistroCombustible, HojaTrabajo } from '../types';
 import { formatQuetzales } from '../utils/alertUtils';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
 
 interface InformesViewProps {
   vehiculos: Vehiculo[];
@@ -39,13 +41,13 @@ export const InformesView: React.FC<InformesViewProps> = ({
   const [fechaFin, setFechaFin] = useState(hoyStr);
   const [modoImpresionActivo, setModoImpresionActivo] = useState(false);
   const [mostrarBotonManual, setMostrarBotonManual] = useState(false);
-  const [bloqueoIframeAviso, setBloqueoIframeAviso] = useState(false);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
 
   // Restaurar pantalla a estado normal
   const restaurarVistaNormal = useCallback(() => {
     setModoImpresionActivo(false);
     setMostrarBotonManual(false);
-    setBloqueoIframeAviso(false);
+    setGenerandoPDF(false);
     document.body.classList.remove('informe-modo-impresion');
   }, []);
 
@@ -171,27 +173,174 @@ export const InformesView: React.FC<InformesViewProps> = ({
   // 2. El useEffect intenta abrir automáticamente el cuadro de impresión del navegador
   const handleImprimir = () => {
     setMostrarBotonManual(false);
-    setBloqueoIframeAviso(false);
     document.body.classList.add('informe-modo-impresion');
     setModoImpresionActivo(true);
   };
 
-  // Función directa de impresión para el botón azul "IMPRIMIR AHORA"
-  function imprimir() {
-    let dialogAbierto = false;
-    const onBeforePrint = () => {
-      dialogAbierto = true;
-    };
-    window.addEventListener('beforeprint', onBeforePrint, { once: true });
+  // Función del botón azul "IMPRIMIR AHORA":
+  // Genera y descarga automáticamente un archivo PDF con todo el informe completo
+  async function imprimir() {
+    if (generandoPDF) return;
+    setGenerandoPDF(true);
 
-    window.print();
+    const nombreArchivo =
+      tipoInforme === 'vehiculo'
+        ? `Informe_MYG_${(placaSeleccionada || 'Vehiculo').replace(/[^a-zA-Z0-9_-]/g, '')}.pdf`
+        : `Informe_MYG_${fechaInicio}_al_${fechaFin}.pdf`;
 
-    setTimeout(() => {
-      window.removeEventListener('beforeprint', onBeforePrint);
-      if (!dialogAbierto && document.hasFocus()) {
-        setBloqueoIframeAviso(true);
+    try {
+      const elemento = document.getElementById('formato-impresion-informe');
+      if (!elemento) {
+        throw new Error('No se encontró el contenedor del informe.');
       }
-    }, 300);
+
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(elemento, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: 1024,
+        onclone: (clonedDoc) => {
+          const clonedEl = clonedDoc.getElementById('formato-impresion-informe');
+          if (clonedEl) {
+            clonedEl.style.width = '920px';
+            clonedEl.style.maxWidth = '920px';
+            clonedEl.style.borderRadius = '0';
+            clonedEl.style.border = 'none';
+            clonedEl.style.boxShadow = 'none';
+            clonedEl.style.padding = '16px';
+          }
+        },
+      });
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'letter',
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidthMm = pageWidth - margin * 2;
+      const contentHeightMm = pageHeight - margin * 2;
+
+      // Altura proporcional total de la imagen en mm para ajustarse al ancho imprimible
+      const totalImgHeightMm = (canvas.height * contentWidthMm) / canvas.width;
+
+      if (totalImgHeightMm <= contentHeightMm) {
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', margin, margin, contentWidthMm, totalImgHeightMm, undefined, 'FAST');
+      } else {
+        // Dividir en múltiples páginas si el informe es extenso
+        const pxPerMm = canvas.width / contentWidthMm;
+        const pageSliceHeightPx = Math.floor(contentHeightMm * pxPerMm);
+        let offsetY = 0;
+        let pageIndex = 0;
+
+        while (offsetY < canvas.height) {
+          const sliceHeight = Math.min(pageSliceHeightPx, canvas.height - offsetY);
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceHeight;
+          const ctx = pageCanvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+            ctx.drawImage(
+              canvas,
+              0,
+              offsetY,
+              canvas.width,
+              sliceHeight,
+              0,
+              0,
+              canvas.width,
+              sliceHeight
+            );
+          }
+
+          const sliceImgData = pageCanvas.toDataURL('image/png');
+          const sliceHeightMm = (sliceHeight * contentWidthMm) / canvas.width;
+
+          if (pageIndex > 0) {
+            pdf.addPage();
+          }
+          pdf.addImage(sliceImgData, 'PNG', margin, margin, contentWidthMm, sliceHeightMm, undefined, 'FAST');
+
+          offsetY += sliceHeight;
+          pageIndex++;
+        }
+      }
+
+      pdf.save(nombreArchivo);
+    } catch (error) {
+      console.error('Error al capturar informe para PDF, usando respaldo directo:', error);
+      // Respaldo programático en jsPDF para garantizar la descarga del PDF en cualquier entorno
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+      let y = 18;
+      pdf.setFontSize(15);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('SISTEMA DE CONTROL DE VEHICULOS MYG', 14, y);
+      y += 6;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(
+        tipoInforme === 'vehiculo'
+          ? `Placa: ${placaSeleccionada} | Piloto: ${vehiculoActual?.piloto || 'Asignado'}`
+          : `Periodo: ${fechaInicio} al ${fechaFin}`,
+        14,
+        y
+      );
+      y += 8;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(
+        `Mano de Obra: ${formatQuetzales(totales.totalManoObra)} | Repuestos: ${formatQuetzales(totales.totalRepuestos)} | Combustible: ${formatQuetzales(totales.totalCombustible)} | Total: ${formatQuetzales(totales.granTotal)}`,
+        14,
+        y
+      );
+      y += 10;
+      pdf.text('Servicios y Mantenimientos:', 14, y);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      serviciosFiltrados.forEach((s) => {
+        if (y > 260) {
+          pdf.addPage();
+          y = 18;
+        }
+        pdf.text(
+          `${s.fecha} | ${s.placa} | ${s.tipoServicio} | ${formatQuetzales(s.costoTotal)}`,
+          14,
+          y
+        );
+        y += 5;
+      });
+      y += 6;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Consumo de Combustible:', 14, y);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      combustibleFiltrado.forEach((c) => {
+        if (y > 260) {
+          pdf.addPage();
+          y = 18;
+        }
+        pdf.text(
+          `${c.fecha} | Sem ${c.semana} | ${c.placa} | ${c.galones ? `${c.galones} gal` : '-'} | ${formatQuetzales(c.montoQuetzales)}`,
+          14,
+          y
+        );
+        y += 5;
+      });
+      pdf.save(nombreArchivo);
+    } finally {
+      setGenerandoPDF(false);
+    }
   }
 
   const handleExportarCSV = () => {
@@ -370,45 +519,45 @@ export const InformesView: React.FC<InformesViewProps> = ({
 
       {/* Barra de respaldo: solo aparece si el cuadro de impresión no se abrió automáticamente */}
       {modoImpresionActivo && mostrarBotonManual && (
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-sm print:hidden animate-in fade-in duration-150 space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-sm print:hidden animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="flex items-center gap-2 sm:pt-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
               <span className="text-xs sm:text-sm font-bold text-slate-800">
                 Si la ventana de impresión no se abrió automáticamente, presiona:
               </span>
             </div>
-            <div className="flex items-center gap-2.5">
-              {/* Botón visible IMPRIMIR AHORA para disparo manual */}
-              <button
-                type="button"
-                onClick={imprimir}
-                id="btn-imprimir-ahora"
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center gap-2 cursor-pointer shadow-md uppercase tracking-wider"
-                title="Abrir ventana de impresión del navegador"
-              >
-                <Printer className="w-4 h-4" />
-                <span>IMPRIMIR AHORA</span>
-              </button>
+            <div className="flex flex-col items-stretch sm:items-end gap-1.5">
+              <div className="flex items-center gap-2.5">
+                {/* Botón visible IMPRIMIR AHORA para generar y descargar PDF */}
+                <button
+                  type="button"
+                  onClick={imprimir}
+                  disabled={generandoPDF}
+                  id="btn-imprimir-ahora"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-60 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 cursor-pointer shadow-md uppercase tracking-wider"
+                  title="Generar y descargar PDF del informe"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>{generandoPDF ? 'GENERANDO PDF...' : 'IMPRIMIR AHORA'}</span>
+                </button>
 
-              {/* Botón para volver a la vista normal */}
-              <button
-                type="button"
-                onClick={restaurarVistaNormal}
-                id="btn-volver-vista-normal"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
-                title="Regresar a la vista con filtros y botones"
-              >
-                <span>← Volver a la vista normal</span>
-              </button>
+                {/* Botón para volver a la vista normal */}
+                <button
+                  type="button"
+                  onClick={restaurarVistaNormal}
+                  id="btn-volver-vista-normal"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                  title="Regresar a la vista con filtros y botones"
+                >
+                  <span>← Volver a la vista normal</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium text-center sm:text-left">
+                Se descargará un PDF, ábrelo y desde ahí puedes imprimirlo
+              </p>
             </div>
           </div>
-
-          {bloqueoIframeAviso && (
-            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-              Si estás viendo la aplicación dentro de una vista previa embebida que bloquea cuadros de impresión, abre la app en una pestaña propia del navegador o usa <strong>Ctrl+P / Cmd+P</strong> (en celular: menú del navegador → Imprimir).
-            </p>
-          )}
         </div>
       )}
 
