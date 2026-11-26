@@ -7,6 +7,8 @@ import {
   subscribeUsuarios,
   subscribeHojasTrabajo,
   subscribeHojasCampoHC,
+  subscribePagosManoObra,
+  subscribeComprasRepuestos,
   inicializarDatosPredeterminados,
 } from './services/firestoreService';
 import {
@@ -17,6 +19,8 @@ import {
   Usuario,
   HojaTrabajo,
   HojaCampoManual,
+  PagoManoObra,
+  CompraRepuesto,
 } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -28,6 +32,9 @@ import { CombustibleView } from './components/CombustibleView';
 import { RepuestosView } from './components/RepuestosView';
 import { HojaTrabajoView } from './components/HojaTrabajoView';
 import { HojaCampoManualView } from './components/HojaCampoManualView';
+import { PagoManoObraView } from './components/PagoManoObraView';
+import { CompraRepuestosView } from './components/CompraRepuestosView';
+import { InformesPagosView } from './components/InformesPagosView';
 import { InformesView } from './components/InformesView';
 import { UsuariosView } from './components/UsuariosView';
 import { LoginModal } from './components/LoginModal';
@@ -53,6 +60,8 @@ export default function App() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [hojasTrabajo, setHojasTrabajo] = useState<HojaTrabajo[]>([]);
   const [hojasCampoHC, setHojasCampoHC] = useState<HojaCampoManual[]>([]);
+  const [pagosManoObra, setPagosManoObra] = useState<PagoManoObra[]>([]);
+  const [comprasRepuestos, setComprasRepuestos] = useState<CompraRepuesto[]>([]);
 
   // Control de audio y voz
   const [audioEnabled, setAudioEnabled] = useState<boolean>(() => isAudioSaludoEnabled());
@@ -173,6 +182,16 @@ export default function App() {
       setHojasCampoHC(data);
     });
 
+    // 8. Pagos de Mano de Obra (PM-0001)
+    const unsubPagosPM = subscribePagosManoObra((data) => {
+      setPagosManoObra(data);
+    });
+
+    // 9. Compras de Repuestos (PR-0001)
+    const unsubComprasPR = subscribeComprasRepuestos((data) => {
+      setComprasRepuestos(data);
+    });
+
     return () => {
       unsubVehiculos();
       unsubServicios();
@@ -181,6 +200,8 @@ export default function App() {
       unsubUsuarios();
       unsubHojas();
       unsubHojasHC();
+      unsubPagosPM();
+      unsubComprasPR();
     };
   }, []);
 
@@ -324,6 +345,34 @@ export default function App() {
             hojas={hojasCampoHC}
             vehiculos={vehiculos}
             currentUser={currentUser}
+          />
+        )}
+
+        {activeTab === 'pago_mano_obra' && (
+          <PagoManoObraView
+            pagos={pagosManoObra}
+            vehiculos={vehiculos}
+            hojasCampoHC={hojasCampoHC}
+            currentUser={currentUser}
+            onIrAInformes={() => setActiveTab('informes_pagos')}
+          />
+        )}
+
+        {activeTab === 'compra_repuestos' && (
+          <CompraRepuestosView
+            compras={comprasRepuestos}
+            vehiculos={vehiculos}
+            repuestosCatalogo={repuestos}
+            currentUser={currentUser}
+            onIrAInformes={() => setActiveTab('informes_pagos')}
+          />
+        )}
+
+        {activeTab === 'informes_pagos' && (
+          <InformesPagosView
+            pagosManoObra={pagosManoObra}
+            comprasRepuestos={comprasRepuestos}
+            vehiculos={vehiculos}
           />
         )}
 

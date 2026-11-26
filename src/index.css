@@ -69,6 +69,7 @@
   #formato-impresion-informe,
   #formato-impresion-hoja,
   #formato-impresion-hoja-campo-hc,
+  #formato-impresion-informe-pagos,
   .printable-area,
   .printable-document {
     display: block !important;

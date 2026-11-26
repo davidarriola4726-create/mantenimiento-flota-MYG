@@ -17,6 +17,8 @@ import {
   Usuario,
   HojaTrabajo,
   HojaCampoManual,
+  PagoManoObra,
+  CompraRepuesto,
 } from '../types';
 
 // Nombres de colecciones requeridas
@@ -28,6 +30,8 @@ export const COLLECTIONS = {
   USUARIOS: 'usuarios',
   HOJAS_TRABAJO: 'hojas_trabajo',
   HOJAS_CAMPO_HC: 'hojas_campo_hc',
+  PAGOS_MANO_OBRA: 'pagos_mano_obra',
+  COMPRAS_REPUESTOS: 'compras_repuestos',
 };
 
 // ============================================
@@ -406,6 +410,150 @@ export async function saveHojaCampoHC(hoja: HojaCampoManual): Promise<void> {
 export async function deleteHojaCampoHC(id: string): Promise<void> {
   if (!id || !id.trim()) return;
   await deleteDoc(doc(db, COLLECTIONS.HOJAS_CAMPO_HC, id.trim()));
+}
+
+// ============================================
+// 5C. REGISTRO DE PAGO DE MANO DE OBRA (CORRELATIVO PM-0001)
+// ============================================
+export function formatearCorrelativoPM(numero: number): string {
+  return `PM-${String(Math.max(1, numero)).padStart(4, '0')}`;
+}
+
+export function subscribePagosManoObra(callback: (pagos: PagoManoObra[]) => void) {
+  const q = collection(db, COLLECTIONS.PAGOS_MANO_OBRA);
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const pagos: PagoManoObra[] = [];
+      snapshot.forEach((docSnap) => {
+        pagos.push({ id: docSnap.id, ...docSnap.data() } as PagoManoObra);
+      });
+      pagos.sort((a, b) => (b.numeroSecuencial || 0) - (a.numeroSecuencial || 0));
+      callback(pagos);
+    },
+    (error) => {
+      console.error('Error al escuchar pagos de mano de obra en tiempo real:', error);
+    }
+  );
+}
+
+export async function crearPagoManoObra(
+  datos: Omit<PagoManoObra, 'id' | 'correlativo' | 'numeroSecuencial' | 'creadoEn' | 'actualizadoEn'>
+): Promise<PagoManoObra> {
+  const counterRef = doc(db, '_config', 'pago_mano_obra_counter');
+  return await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef);
+    const ahora = new Date().toISOString();
+    const ultimoActual = counterSnap.exists() ? Number(counterSnap.data()?.ultimoNumero) || 0 : 0;
+    const siguienteNumero = ultimoActual + 1;
+    const correlativo = formatearCorrelativoPM(siguienteNumero);
+    const docRef = doc(db, COLLECTIONS.PAGOS_MANO_OBRA, correlativo);
+
+    const nuevoPago: PagoManoObra = {
+      ...datos,
+      id: correlativo,
+      correlativo,
+      numeroSecuencial: siguienteNumero,
+      placa: (datos.placa || '').trim().toUpperCase(),
+      monto: Number(datos.monto) || 0,
+      creadoEn: ahora,
+      actualizadoEn: ahora,
+    };
+
+    transaction.set(counterRef, { ultimoNumero: siguienteNumero, actualizadoEn: ahora });
+    transaction.set(docRef, nuevoPago);
+    return nuevoPago;
+  });
+}
+
+export async function updatePagoManoObra(pago: PagoManoObra): Promise<void> {
+  const docId = pago.id || pago.correlativo;
+  const docRef = doc(db, COLLECTIONS.PAGOS_MANO_OBRA, docId);
+  const dataToSave: PagoManoObra = {
+    ...pago,
+    id: docId,
+    placa: (pago.placa || '').trim().toUpperCase(),
+    monto: Number(pago.monto) || 0,
+    actualizadoEn: new Date().toISOString(),
+  };
+  await setDoc(docRef, dataToSave, { merge: true });
+}
+
+export async function deletePagoManoObra(id: string): Promise<void> {
+  if (!id || !id.trim()) return;
+  await deleteDoc(doc(db, COLLECTIONS.PAGOS_MANO_OBRA, id.trim()));
+}
+
+// ============================================
+// 5D. REGISTRO DE COMPRA DE REPUESTOS (CORRELATIVO PR-0001)
+// ============================================
+export function formatearCorrelativoPR(numero: number): string {
+  return `PR-${String(Math.max(1, numero)).padStart(4, '0')}`;
+}
+
+export function subscribeComprasRepuestos(callback: (compras: CompraRepuesto[]) => void) {
+  const q = collection(db, COLLECTIONS.COMPRAS_REPUESTOS);
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const compras: CompraRepuesto[] = [];
+      snapshot.forEach((docSnap) => {
+        compras.push({ id: docSnap.id, ...docSnap.data() } as CompraRepuesto);
+      });
+      compras.sort((a, b) => (b.numeroSecuencial || 0) - (a.numeroSecuencial || 0));
+      callback(compras);
+    },
+    (error) => {
+      console.error('Error al escuchar compras de repuestos en tiempo real:', error);
+    }
+  );
+}
+
+export async function crearCompraRepuesto(
+  datos: Omit<CompraRepuesto, 'id' | 'correlativo' | 'numeroSecuencial' | 'creadoEn' | 'actualizadoEn'>
+): Promise<CompraRepuesto> {
+  const counterRef = doc(db, '_config', 'compra_repuestos_counter');
+  return await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef);
+    const ahora = new Date().toISOString();
+    const ultimoActual = counterSnap.exists() ? Number(counterSnap.data()?.ultimoNumero) || 0 : 0;
+    const siguienteNumero = ultimoActual + 1;
+    const correlativo = formatearCorrelativoPR(siguienteNumero);
+    const docRef = doc(db, COLLECTIONS.COMPRAS_REPUESTOS, correlativo);
+
+    const nuevaCompra: CompraRepuesto = {
+      ...datos,
+      id: correlativo,
+      correlativo,
+      numeroSecuencial: siguienteNumero,
+      placa: (datos.placa || '').trim().toUpperCase(),
+      monto: Number(datos.monto) || 0,
+      creadoEn: ahora,
+      actualizadoEn: ahora,
+    };
+
+    transaction.set(counterRef, { ultimoNumero: siguienteNumero, actualizadoEn: ahora });
+    transaction.set(docRef, nuevaCompra);
+    return nuevaCompra;
+  });
+}
+
+export async function updateCompraRepuesto(compra: CompraRepuesto): Promise<void> {
+  const docId = compra.id || compra.correlativo;
+  const docRef = doc(db, COLLECTIONS.COMPRAS_REPUESTOS, docId);
+  const dataToSave: CompraRepuesto = {
+    ...compra,
+    id: docId,
+    placa: (compra.placa || '').trim().toUpperCase(),
+    monto: Number(compra.monto) || 0,
+    actualizadoEn: new Date().toISOString(),
+  };
+  await setDoc(docRef, dataToSave, { merge: true });
+}
+
+export async function deleteCompraRepuesto(id: string): Promise<void> {
+  if (!id || !id.trim()) return;
+  await deleteDoc(doc(db, COLLECTIONS.COMPRAS_REPUESTOS, id.trim()));
 }
 
 // ============================================

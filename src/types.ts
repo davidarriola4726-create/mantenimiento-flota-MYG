@@ -123,6 +123,44 @@ export interface HojaCampoManual {
   actualizadoEn: string;
 }
 
+export type EstadoPagoRegistro = 'Efectivo' | 'Pagado' | 'Al crédito';
+
+export interface PagoManoObra {
+  id: string;
+  correlativo: string; // e.g. "PM-0001"
+  numeroSecuencial: number;
+  fecha: string;
+  monto: number;
+  tipoMantenimiento: string;
+  correlativoHC: string;
+  modeloVehiculo: string;
+  placa: string;
+  numeroRuta: string;
+  voucher: string;
+  estadoPago: EstadoPagoRegistro;
+  fechaPagoCancelado?: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
+export interface CompraRepuesto {
+  id: string;
+  correlativo: string; // e.g. "PR-0001"
+  numeroSecuencial: number;
+  fecha: string;
+  monto: number;
+  nombreRepuesto: string;
+  marcaProveedor: string;
+  modeloVehiculo: string;
+  placa: string;
+  numeroRuta: string;
+  voucher: string;
+  estadoPago: EstadoPagoRegistro;
+  fechaPagoCancelado?: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
 export interface ResumenAlerta {
   estado: EstadoAlerta;
   mensaje: string;

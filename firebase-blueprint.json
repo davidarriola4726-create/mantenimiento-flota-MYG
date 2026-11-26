@@ -112,6 +112,44 @@
         "creadoEn": { "type": "string" },
         "actualizadoEn": { "type": "string" }
       }
+    },
+    "PagoManoObra": {
+      "collection": "pagos_mano_obra",
+      "fields": {
+        "correlativo": { "type": "string" },
+        "numeroSecuencial": { "type": "number" },
+        "fecha": { "type": "string" },
+        "monto": { "type": "number" },
+        "tipoMantenimiento": { "type": "string" },
+        "correlativoHC": { "type": "string" },
+        "modeloVehiculo": { "type": "string" },
+        "placa": { "type": "string" },
+        "numeroRuta": { "type": "string" },
+        "voucher": { "type": "string" },
+        "estadoPago": { "type": "string" },
+        "fechaPagoCancelado": { "type": "string" },
+        "creadoEn": { "type": "string" },
+        "actualizadoEn": { "type": "string" }
+      }
+    },
+    "CompraRepuesto": {
+      "collection": "compras_repuestos",
+      "fields": {
+        "correlativo": { "type": "string" },
+        "numeroSecuencial": { "type": "number" },
+        "fecha": { "type": "string" },
+        "monto": { "type": "number" },
+        "nombreRepuesto": { "type": "string" },
+        "marcaProveedor": { "type": "string" },
+        "modeloVehiculo": { "type": "string" },
+        "placa": { "type": "string" },
+        "numeroRuta": { "type": "string" },
+        "voucher": { "type": "string" },
+        "estadoPago": { "type": "string" },
+        "fechaPagoCancelado": { "type": "string" },
+        "creadoEn": { "type": "string" },
+        "actualizadoEn": { "type": "string" }
+      }
     }
   }
 }

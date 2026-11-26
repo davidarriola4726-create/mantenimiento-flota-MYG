@@ -10,6 +10,9 @@ import {
   FileBarChart,
   Users,
   ClipboardList,
+  Banknote,
+  ShoppingCart,
+  Receipt,
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -32,6 +35,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'repuestos', label: 'Catálogo Repuestos', icon: Package },
     { id: 'hoja_campo', label: 'Hoja de Campo', icon: FileText },
     { id: 'hoja_campo_manual', label: 'Hoja de Campo HC', icon: ClipboardList },
+    { id: 'pago_mano_obra', label: 'Pago Mano Obra (PM)', icon: Banknote },
+    { id: 'compra_repuestos', label: 'Compra Repuestos (PR)', icon: ShoppingCart },
+    { id: 'informes_pagos', label: 'Informes Crédito/Pagos', icon: Receipt },
     { id: 'informes', label: 'Informes & Imprimir', icon: FileBarChart },
     { id: 'usuarios', label: 'Usuarios & Claves', icon: Users },
   ];
