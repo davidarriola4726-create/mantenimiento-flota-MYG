@@ -6,8 +6,7 @@ import {
   deleteDoc,
   onSnapshot,
   getDocs,
-  query,
-  orderBy,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import {
@@ -17,6 +16,7 @@ import {
   RepuestoCatalogo,
   Usuario,
   HojaTrabajo,
+  HojaCampoManual,
 } from '../types';
 
 // Nombres de colecciones requeridas
@@ -27,6 +27,7 @@ export const COLLECTIONS = {
   REPUESTOS: 'repuestos',
   USUARIOS: 'usuarios',
   HOJAS_TRABAJO: 'hojas_trabajo',
+  HOJAS_CAMPO_HC: 'hojas_campo_hc',
 };
 
 // ============================================
@@ -253,6 +254,158 @@ export async function saveHojaTrabajo(hoja: HojaTrabajo): Promise<void> {
 
 export async function deleteHojaTrabajo(id: string): Promise<void> {
   await deleteDoc(doc(db, COLLECTIONS.HOJAS_TRABAJO, id));
+}
+
+// ============================================
+// 5B. HOJA DE CAMPO IMPRIMIBLE (CORRELATIVO HC-0001)
+// ============================================
+const crearRepuestosEnBlanco = () =>
+  Array.from({ length: 8 }, () => ({
+    cantidad: '',
+    descripcion: '',
+    precioUnitario: '',
+    total: '',
+  }));
+
+export function formatearCorrelativoHC(numero: number): string {
+  return `HC-${String(Math.max(1, numero)).padStart(4, '0')}`;
+}
+
+export function subscribeHojasCampoHC(callback: (hojas: HojaCampoManual[]) => void) {
+  const q = collection(db, COLLECTIONS.HOJAS_CAMPO_HC);
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const hojas: HojaCampoManual[] = [];
+      snapshot.forEach((docSnap) => {
+        hojas.push({ id: docSnap.id, ...docSnap.data() } as HojaCampoManual);
+      });
+      hojas.sort((a, b) => (b.numeroSecuencial || 0) - (a.numeroSecuencial || 0));
+      callback(hojas);
+    },
+    (error) => {
+      console.error('Error al escuchar hojas de campo HC en tiempo real:', error);
+    }
+  );
+}
+
+export async function asegurarPrimeraHojaCampoHC(): Promise<HojaCampoManual> {
+  const counterRef = doc(db, '_config', 'hoja_campo_hc_counter');
+  return await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef);
+    const ahora = new Date().toISOString();
+
+    if (!counterSnap.exists()) {
+      const numero = 1;
+      const correlativo = formatearCorrelativoHC(numero);
+      const hojaRef = doc(db, COLLECTIONS.HOJAS_CAMPO_HC, correlativo);
+      const nuevaHoja: HojaCampoManual = {
+        id: correlativo,
+        correlativo,
+        numeroSecuencial: numero,
+        fecha: '',
+        tipoVehiculo: '',
+        placa: '',
+        kilometrajeInicial: '',
+        kilometrajeFinal: '',
+        nombrePiloto: '',
+        repuestos: crearRepuestosEnBlanco(),
+        costoManoObra: '',
+        fechaProximoMantenimiento: '',
+        observaciones: '',
+        estado: 'borrador',
+        vecesImpresa: 0,
+        creadoEn: ahora,
+        actualizadoEn: ahora,
+      };
+      transaction.set(counterRef, { ultimoNumero: numero, actualizadoEn: ahora });
+      transaction.set(hojaRef, nuevaHoja);
+      return nuevaHoja;
+    }
+
+    const ultimoNumero = Number(counterSnap.data()?.ultimoNumero) || 1;
+    const correlativo = formatearCorrelativoHC(ultimoNumero);
+    const hojaRef = doc(db, COLLECTIONS.HOJAS_CAMPO_HC, correlativo);
+    const hojaSnap = await transaction.get(hojaRef);
+    if (hojaSnap.exists()) {
+      return { id: hojaSnap.id, ...hojaSnap.data() } as HojaCampoManual;
+    }
+
+    const nuevaHoja: HojaCampoManual = {
+      id: correlativo,
+      correlativo,
+      numeroSecuencial: ultimoNumero,
+      fecha: '',
+      tipoVehiculo: '',
+      placa: '',
+      kilometrajeInicial: '',
+      kilometrajeFinal: '',
+      nombrePiloto: '',
+      repuestos: crearRepuestosEnBlanco(),
+      costoManoObra: '',
+      fechaProximoMantenimiento: '',
+      observaciones: '',
+      estado: 'borrador',
+      vecesImpresa: 0,
+      creadoEn: ahora,
+      actualizadoEn: ahora,
+    };
+    transaction.set(hojaRef, nuevaHoja);
+    return nuevaHoja;
+  });
+}
+
+export async function crearSiguienteHojaCampoHC(): Promise<HojaCampoManual> {
+  const counterRef = doc(db, '_config', 'hoja_campo_hc_counter');
+  return await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef);
+    const ahora = new Date().toISOString();
+    const ultimoActual = counterSnap.exists() ? Number(counterSnap.data()?.ultimoNumero) || 0 : 0;
+    const siguienteNumero = ultimoActual + 1;
+    const correlativo = formatearCorrelativoHC(siguienteNumero);
+    const hojaRef = doc(db, COLLECTIONS.HOJAS_CAMPO_HC, correlativo);
+
+    const nuevaHoja: HojaCampoManual = {
+      id: correlativo,
+      correlativo,
+      numeroSecuencial: siguienteNumero,
+      fecha: '',
+      tipoVehiculo: '',
+      placa: '',
+      kilometrajeInicial: '',
+      kilometrajeFinal: '',
+      nombrePiloto: '',
+      repuestos: crearRepuestosEnBlanco(),
+      costoManoObra: '',
+      fechaProximoMantenimiento: '',
+      observaciones: '',
+      estado: 'borrador',
+      vecesImpresa: 0,
+      creadoEn: ahora,
+      actualizadoEn: ahora,
+    };
+
+    transaction.set(counterRef, { ultimoNumero: siguienteNumero, actualizadoEn: ahora });
+    transaction.set(hojaRef, nuevaHoja);
+    return nuevaHoja;
+  });
+}
+
+export async function saveHojaCampoHC(hoja: HojaCampoManual): Promise<void> {
+  const docId = hoja.id || hoja.correlativo;
+  const docRef = doc(db, COLLECTIONS.HOJAS_CAMPO_HC, docId);
+  const dataToSave: HojaCampoManual = {
+    ...hoja,
+    id: docId,
+    placa: (hoja.placa || '').trim().toUpperCase(),
+    actualizadoEn: new Date().toISOString(),
+  };
+  await setDoc(docRef, dataToSave, { merge: true });
+}
+
+export async function deleteHojaCampoHC(id: string): Promise<void> {
+  if (!id || !id.trim()) return;
+  await deleteDoc(doc(db, COLLECTIONS.HOJAS_CAMPO_HC, id.trim()));
 }
 
 // ============================================

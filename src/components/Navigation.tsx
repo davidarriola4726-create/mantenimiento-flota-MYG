@@ -9,6 +9,7 @@ import {
   FileText,
   FileBarChart,
   Users,
+  ClipboardList,
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -30,6 +31,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'combustible', label: 'Combustible (Q)', icon: Fuel },
     { id: 'repuestos', label: 'Catálogo Repuestos', icon: Package },
     { id: 'hoja_campo', label: 'Hoja de Campo', icon: FileText },
+    { id: 'hoja_campo_manual', label: 'Hoja de Campo HC', icon: ClipboardList },
     { id: 'informes', label: 'Informes & Imprimir', icon: FileBarChart },
     { id: 'usuarios', label: 'Usuarios & Claves', icon: Users },
   ];

@@ -96,6 +96,33 @@ export interface HojaTrabajo {
   creadoEn: string;
 }
 
+export interface HojaCampoManualRepuesto {
+  cantidad: string;
+  descripcion: string;
+  precioUnitario: string;
+  total: string;
+}
+
+export interface HojaCampoManual {
+  id: string;
+  correlativo: string; // e.g. "HC-0001"
+  numeroSecuencial: number; // e.g. 1
+  fecha: string;
+  tipoVehiculo: string;
+  placa: string;
+  kilometrajeInicial: string;
+  kilometrajeFinal: string;
+  nombrePiloto: string;
+  repuestos: HojaCampoManualRepuesto[];
+  costoManoObra: string;
+  fechaProximoMantenimiento: string;
+  observaciones: string;
+  estado: 'borrador' | 'emitida';
+  vecesImpresa?: number;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
 export interface ResumenAlerta {
   estado: EstadoAlerta;
   mensaje: string;

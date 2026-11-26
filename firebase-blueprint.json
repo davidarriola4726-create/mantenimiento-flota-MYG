@@ -91,6 +91,27 @@
         "firmaPiloto": { "type": "string" },
         "creadoEn": { "type": "string" }
       }
+    },
+    "HojaCampoManual": {
+      "collection": "hojas_campo_hc",
+      "fields": {
+        "correlativo": { "type": "string" },
+        "numeroSecuencial": { "type": "number" },
+        "fecha": { "type": "string" },
+        "tipoVehiculo": { "type": "string" },
+        "placa": { "type": "string" },
+        "kilometrajeInicial": { "type": "string" },
+        "kilometrajeFinal": { "type": "string" },
+        "nombrePiloto": { "type": "string" },
+        "repuestos": { "type": "array" },
+        "costoManoObra": { "type": "string" },
+        "fechaProximoMantenimiento": { "type": "string" },
+        "observaciones": { "type": "string" },
+        "estado": { "type": "string" },
+        "vecesImpresa": { "type": "number" },
+        "creadoEn": { "type": "string" },
+        "actualizadoEn": { "type": "string" }
+      }
     }
   }
 }

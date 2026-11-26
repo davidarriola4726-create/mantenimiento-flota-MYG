@@ -68,6 +68,7 @@
   #formato-impresion-mantenimiento,
   #formato-impresion-informe,
   #formato-impresion-hoja,
+  #formato-impresion-hoja-campo-hc,
   .printable-area,
   .printable-document {
     display: block !important;

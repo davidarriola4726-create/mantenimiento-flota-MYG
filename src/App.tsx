@@ -6,6 +6,7 @@ import {
   subscribeRepuestos,
   subscribeUsuarios,
   subscribeHojasTrabajo,
+  subscribeHojasCampoHC,
   inicializarDatosPredeterminados,
 } from './services/firestoreService';
 import {
@@ -15,6 +16,7 @@ import {
   RepuestoCatalogo,
   Usuario,
   HojaTrabajo,
+  HojaCampoManual,
 } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -25,6 +27,7 @@ import { CalendarioView } from './components/CalendarioView';
 import { CombustibleView } from './components/CombustibleView';
 import { RepuestosView } from './components/RepuestosView';
 import { HojaTrabajoView } from './components/HojaTrabajoView';
+import { HojaCampoManualView } from './components/HojaCampoManualView';
 import { InformesView } from './components/InformesView';
 import { UsuariosView } from './components/UsuariosView';
 import { LoginModal } from './components/LoginModal';
@@ -49,6 +52,7 @@ export default function App() {
   const [repuestos, setRepuestos] = useState<RepuestoCatalogo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [hojasTrabajo, setHojasTrabajo] = useState<HojaTrabajo[]>([]);
+  const [hojasCampoHC, setHojasCampoHC] = useState<HojaCampoManual[]>([]);
 
   // Control de audio y voz
   const [audioEnabled, setAudioEnabled] = useState<boolean>(() => isAudioSaludoEnabled());
@@ -164,6 +168,11 @@ export default function App() {
       setHojasTrabajo(data);
     });
 
+    // 7. Hojas de Campo Imprimibles (HC-0001)
+    const unsubHojasHC = subscribeHojasCampoHC((data) => {
+      setHojasCampoHC(data);
+    });
+
     return () => {
       unsubVehiculos();
       unsubServicios();
@@ -171,6 +180,7 @@ export default function App() {
       unsubRepuestos();
       unsubUsuarios();
       unsubHojas();
+      unsubHojasHC();
     };
   }, []);
 
@@ -306,6 +316,14 @@ export default function App() {
             repuestosCatalogo={repuestos}
             currentUser={currentUser}
             onVerVehiculo={() => setActiveTab('vehiculos')}
+          />
+        )}
+
+        {activeTab === 'hoja_campo_manual' && (
+          <HojaCampoManualView
+            hojas={hojasCampoHC}
+            vehiculos={vehiculos}
+            currentUser={currentUser}
           />
         )}
 
